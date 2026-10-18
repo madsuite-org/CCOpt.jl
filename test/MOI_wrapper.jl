@@ -68,6 +68,37 @@ function test_runtests()
     return
 end
 
+function test_raw_status_string()
+    # 0 <= x1 _|_ x2 >= 0, minimising the distance to (1, 1): optima at (1, 0) and (0, 1).
+    inner = MOI.instantiate(CCOpt.Optimizer, with_bridge_type = Float64)
+    _add_all_bridges(inner)
+    model = MOI.Utilities.CachingOptimizer(
+        MOI.Utilities.UniversalFallback(MOI.Utilities.Model{Float64}()),
+        inner,
+    )
+    MOI.set(model, MOI.Silent(), true)
+    x = MOI.add_variables(model, 2)
+    for xi in x
+        MOI.add_constraint(model, xi, MOI.GreaterThan(0.0))
+    end
+    MOI.add_constraint(model, MOI.VectorOfVariables(x), MOI.Complements(2))
+    f = MOI.ScalarQuadraticFunction(
+        [MOI.ScalarQuadraticTerm(2.0, xi, xi) for xi in x],
+        [MOI.ScalarAffineTerm(-2.0, xi) for xi in x],
+        2.0,
+    )
+    MOI.set(model, MOI.ObjectiveFunction{typeof(f)}(), f)
+    MOI.set(model, MOI.ObjectiveSense(), MOI.MIN_SENSE)
+    MOI.optimize!(model)
+    @test MOI.get(model, MOI.TerminationStatus()) ∈
+          [MOI.LOCALLY_SOLVED, MOI.ALMOST_LOCALLY_SOLVED]
+    status = MOI.get(model, MOI.RawStatusString())
+    @test status isa String
+    @test startswith(status, "Optimal Solution Found") ||
+          startswith(status, "Solved To Acceptable Level")
+    return
+end
+
 function runtests()
     for name in names(@__MODULE__; all = true)
         if startswith("$(name)", "test_")

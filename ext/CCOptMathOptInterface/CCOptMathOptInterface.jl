@@ -227,11 +227,11 @@ function MOI.get(optimizer::Optimizer, ::MOI.SolveTimeSec)
 end
 
 function MOI.get(optimizer::Optimizer, ::MOI.RawStatusString)
-    if optimizer.solver === nothing
+    if optimizer.stats === nothing
         return "Optimize not called"
     end
-    opt = optimizer.solver.opt
-    return MadNLP.get_status_output(optimizer.stats.status, opt)
+    # Both CCOptExecutionStats and MadNLPExecutionStats carry MadNLP's options.
+    return MadNLP.get_status_output(optimizer.stats.status, optimizer.stats.options)
 end
 
 struct RawStatus <: MOI.AbstractModelAttribute
