@@ -61,4 +61,4 @@ In addition, CCOpt supports complementarity problems formulated using
 
 ### Linear solvers
 
-CCOpt supports all the sparse linear solvers [wrapped inside MadNLP](https://madsuite.org/MadNLP.jl/dev/#Linear-solvers). We recommend using the HSL solvers for fastest performance.
+CCOpt supports all the sparse linear solvers [wrapped inside MadNLP](https://madsuite.org/MadNLP.jl/dev/#Linear-solvers). CCOpt depends on MadNLPCore, which has no default sparse linear solver: load MadNLP to use MUMPS by default, or set the option `linear_solver`. We recommend using the HSL solvers for fastest performance.
