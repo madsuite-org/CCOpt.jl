@@ -40,9 +40,9 @@ function set_relax_magic_step!(solver, ii, z1, z2, zs, x1, x2, delta_zs)
     cb = ipm.cb
 
     ## Set the new duals
-    MadNLP.variable(ipm.zl)[cc1] = z1
-    MadNLP.variable(ipm.zl)[cc2] = z2
-    MadNLP.slack(ipm.zu)[end-ncc+ii] = zs
+    MadNLPCore.variable(ipm.zl)[cc1] = z1
+    MadNLPCore.variable(ipm.zl)[cc2] = z2
+    MadNLPCore.slack(ipm.zu)[end-ncc+ii] = zs
     ipm.y[end-ncc+ii] = zs
 
     ## Set the new J'y_c
@@ -81,12 +81,12 @@ function do_endgame!(
         nu1 = solver.multipliers_cc1[ii]
         nu2 = solver.multipliers_cc2[ii]
 
-        x1 = MadNLP.variable(ipm.x)[cc1] - MadNLP.variable(ipm.xl)[cc1]
-        z1 = MadNLP.variable(ipm.zl)[cc1]
-        x2 = MadNLP.variable(ipm.x)[cc2] - MadNLP.variable(ipm.xl)[cc2]
-        z2 = MadNLP.variable(ipm.zl)[cc2]
-        zs = MadNLP.slack(ipm.zu)[end-ncc+ii]
-        s = MadNLP.slack(ipm.x)[end-ncc+ii]
+        x1 = MadNLPCore.variable(ipm.x)[cc1] - MadNLPCore.variable(ipm.xl)[cc1]
+        z1 = MadNLPCore.variable(ipm.zl)[cc1]
+        x2 = MadNLPCore.variable(ipm.x)[cc2] - MadNLPCore.variable(ipm.xl)[cc2]
+        z2 = MadNLPCore.variable(ipm.zl)[cc2]
+        zs = MadNLPCore.slack(ipm.zu)[end-ncc+ii]
+        s = MadNLPCore.slack(ipm.x)[end-ncc+ii]
 
         nu1_inactive = nu1 <= -(nu_bound)
         if nu1_inactive
@@ -99,7 +99,7 @@ function do_endgame!(
             # Relax the lower bound, and take a magic step in the multipliers
             rnlp.δ1[ii] = delta_candidate
             updated = true
-            MadNLP.variable(ipm.xl)[cc1] = get_lvar(mpcc)[cc1_orig] - rnlp.δ1[ii]
+            MadNLPCore.variable(ipm.xl)[cc1] = get_lvar(mpcc)[cc1_orig] - rnlp.δ1[ii]
 
             # Calculate new values
             z1_hat, z2_hat, zs_hat =
@@ -121,7 +121,7 @@ function do_endgame!(
             end
             rnlp.δ2[ii] = delta_candidate
             updated = true
-            MadNLP.variable(ipm.xl)[cc2] = get_lvar(mpcc)[cc2_orig] - rnlp.δ2[ii]
+            MadNLPCore.variable(ipm.xl)[cc2] = get_lvar(mpcc)[cc2_orig] - rnlp.δ2[ii]
 
             # Calculate new values
             z2_hat, z1_hat, zs_hat =

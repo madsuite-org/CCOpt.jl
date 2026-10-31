@@ -1,4 +1,4 @@
-@kwdef struct PenaltyOptions{T} <: MadNLP.AbstractOptions
+@kwdef struct PenaltyOptions{T} <: MadNLPCore.AbstractOptions
     penalty::Type = Ell1Relaxation
     # complementarity homotopy options
     rho_0::T = 1.0
@@ -22,8 +22,8 @@
 
     # Output options
     output_file::String = ""
-    print_level::MadNLP.LogLevels = MadNLP.INFO
-    file_print_level::MadNLP.LogLevels = MadNLP.INFO
+    print_level::MadNLPCore.LogLevels = MadNLPCore.INFO
+    file_print_level::MadNLPCore.LogLevels = MadNLPCore.INFO
 end
 
 mutable struct PenaltySolver{
@@ -31,13 +31,13 @@ mutable struct PenaltySolver{
     VT,
     MPCC<:AbstractMPCCModel{T,VT},
     PNLP<:AbstractMPCCPenaltyModel{T,VT},
-    SOLVER<:MadNLP.MadNLPSolver{T,VT},
+    SOLVER<:MadNLPCore.MadNLPSolver{T,VT},
 }
     const mpcc::MPCC
     const pnlp::PNLP
     const ipm::SOLVER
     const cnt::CCOptCounters
-    const logger::MadNLP.MadNLPLogger
+    const logger::MadNLPCore.MadNLPLogger
     const opts::PenaltyOptions{T}
 
     inf_pr_cc::T
@@ -65,7 +65,7 @@ function CCOptExecutionStats(solver::PenaltySolver)
         solver.ipm.opt,
         solver.opts,
         solver.ipm.status,
-        MadNLP.unpack_obj(solver.ipm.cb, solver.ipm.obj_val),
+        MadNLPCore.unpack_obj(solver.ipm.cb, solver.ipm.obj_val),
         x,
         c,
         y,
@@ -95,9 +95,9 @@ function PenaltySolver(
 ) where {T,VT}
     start_time = time()
     pnlp = solver_opts.penalty(mpcc)
-    ipm = MadNLP.MadNLPSolver(pnlp; ipm_options...)
+    ipm = MadNLPCore.MadNLPSolver(pnlp; ipm_options...)
     cnt = CCOptCounters(counters = ipm.cnt)
-    logger = MadNLP.MadNLPLogger(
+    logger = MadNLPCore.MadNLPLogger(
         print_level = solver_opts.print_level,
         file_print_level = solver_opts.file_print_level,
         file = solver_opts.output_file == "" ? nothing :

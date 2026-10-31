@@ -18,7 +18,9 @@ jobs:
       fail-fast: false
       matrix:
           os: [ubuntu-latest, windows-latest, macos-latest]
-          julia-version: ['1', 'lts', 'pre']
+          # Julia 1.10 does not read [sources], which points to the unregistered MadNLP.jl
+          # packages; restore it once those packages are registered.
+          julia-version: ['1', 'pre']
           julia-arch: [x64]
     steps:
       - uses: dorny/paths-filter@v4

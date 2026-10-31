@@ -11,7 +11,7 @@ module CCOptMathOptInterface
 
 using MathOptComplements
 using CCOpt
-using MadNLP
+using MadNLPCore
 using NLPModels
 using MPCCModels
 using NLPModelsJuMP
@@ -45,7 +45,7 @@ mutable struct Optimizer <: MOI.AbstractOptimizer
     stats::Union{
         Nothing,
         CCOpt.CCOptExecutionStats{Float64, Vector{Float64}},
-        MadNLP.MadNLPExecutionStats{Float64, Vector{Float64}},
+        MadNLPCore.MadNLPExecutionStats{Float64, Vector{Float64}},
     }
     silent::Bool
     function Optimizer()
@@ -166,8 +166,8 @@ function MOI.copy_to(dest::Optimizer, src::MOI.ModelLike)
     end
     # Check if silent is activated
     if dest.silent
-        options[:print_level] = MadNLP.ERROR
-        relax_options[:print_level] = MadNLP.ERROR
+        options[:print_level] = MadNLPCore.ERROR
+        relax_options[:print_level] = MadNLPCore.ERROR
     end
 
     filtered_src = MOI.Utilities.ModelFilter(src) do item
@@ -184,7 +184,7 @@ function MOI.copy_to(dest::Optimizer, src::MOI.ModelLike)
             "The model does not have any complementarity constraints. Switching to MadNLP."
         )
         dest.mpcc = MPCCModel(nlp, Int[], Int[])
-        dest.solver = MadNLP.MadNLPSolver(nlp; options...)
+        dest.solver = MadNLPCore.MadNLPSolver(nlp; options...)
         return index_map
     end
 
@@ -213,8 +213,8 @@ function MOI.copy_to(dest::Optimizer, src::MOI.ModelLike)
 end
 
 function MOI.optimize!(model::Optimizer)
-    model.stats = if isa(model.solver, MadNLP.MadNLPSolver)
-        MadNLP.solve!(model.solver)
+    model.stats = if isa(model.solver, MadNLPCore.MadNLPSolver)
+        MadNLPCore.solve!(model.solver)
     else
         CCOpt.solve_homotopy!(model.solver)
     end
@@ -231,7 +231,7 @@ function MOI.get(optimizer::Optimizer, ::MOI.RawStatusString)
         return "Optimize not called"
     end
     # Both CCOptExecutionStats and MadNLPExecutionStats carry MadNLP's options.
-    return MadNLP.get_status_output(optimizer.stats.status, optimizer.stats.options)
+    return MadNLPCore.get_status_output(optimizer.stats.status, optimizer.stats.options)
 end
 
 struct RawStatus <: MOI.AbstractModelAttribute
@@ -244,26 +244,26 @@ function MOI.get(optimizer::Optimizer, attr::RawStatus)
     return getfield(optimizer.stats, attr.name)
 end
 
-const TERMINATION_STATUS = Dict{MadNLP.Status, MOI.TerminationStatusCode}(
-    MadNLP.SOLVE_SUCCEEDED => MOI.LOCALLY_SOLVED,
-    MadNLP.SOLVED_TO_ACCEPTABLE_LEVEL => MOI.ALMOST_LOCALLY_SOLVED,
-    MadNLP.SEARCH_DIRECTION_BECOMES_TOO_SMALL => MOI.SLOW_PROGRESS,
-    MadNLP.DIVERGING_ITERATES => MOI.INFEASIBLE_OR_UNBOUNDED,
-    MadNLP.INFEASIBLE_PROBLEM_DETECTED => MOI.LOCALLY_INFEASIBLE,
-    MadNLP.MAXIMUM_ITERATIONS_EXCEEDED => MOI.ITERATION_LIMIT,
-    MadNLP.MAXIMUM_WALLTIME_EXCEEDED => MOI.TIME_LIMIT,
-    MadNLP.INITIAL => MOI.OPTIMIZE_NOT_CALLED,
-    MadNLP.RESTORATION_FAILED => MOI.NUMERICAL_ERROR,
-    MadNLP.INVALID_NUMBER_DETECTED => MOI.INVALID_MODEL,
-    MadNLP.ERROR_IN_STEP_COMPUTATION => MOI.NUMERICAL_ERROR,
-    MadNLP.NOT_ENOUGH_DEGREES_OF_FREEDOM => MOI.INVALID_MODEL,
-    MadNLP.USER_REQUESTED_STOP => MOI.INTERRUPTED,
-    MadNLP.INTERNAL_ERROR => MOI.OTHER_ERROR,
-    MadNLP.INVALID_NUMBER_OBJECTIVE => MOI.INVALID_MODEL,
-    MadNLP.INVALID_NUMBER_GRADIENT => MOI.INVALID_MODEL,
-    MadNLP.INVALID_NUMBER_CONSTRAINTS => MOI.INVALID_MODEL,
-    MadNLP.INVALID_NUMBER_JACOBIAN => MOI.INVALID_MODEL,
-    MadNLP.INVALID_NUMBER_HESSIAN_LAGRANGIAN => MOI.INVALID_MODEL,
+const TERMINATION_STATUS = Dict{MadNLPCore.Status, MOI.TerminationStatusCode}(
+    MadNLPCore.SOLVE_SUCCEEDED => MOI.LOCALLY_SOLVED,
+    MadNLPCore.SOLVED_TO_ACCEPTABLE_LEVEL => MOI.ALMOST_LOCALLY_SOLVED,
+    MadNLPCore.SEARCH_DIRECTION_BECOMES_TOO_SMALL => MOI.SLOW_PROGRESS,
+    MadNLPCore.DIVERGING_ITERATES => MOI.INFEASIBLE_OR_UNBOUNDED,
+    MadNLPCore.INFEASIBLE_PROBLEM_DETECTED => MOI.LOCALLY_INFEASIBLE,
+    MadNLPCore.MAXIMUM_ITERATIONS_EXCEEDED => MOI.ITERATION_LIMIT,
+    MadNLPCore.MAXIMUM_WALLTIME_EXCEEDED => MOI.TIME_LIMIT,
+    MadNLPCore.INITIAL => MOI.OPTIMIZE_NOT_CALLED,
+    MadNLPCore.RESTORATION_FAILED => MOI.NUMERICAL_ERROR,
+    MadNLPCore.INVALID_NUMBER_DETECTED => MOI.INVALID_MODEL,
+    MadNLPCore.ERROR_IN_STEP_COMPUTATION => MOI.NUMERICAL_ERROR,
+    MadNLPCore.NOT_ENOUGH_DEGREES_OF_FREEDOM => MOI.INVALID_MODEL,
+    MadNLPCore.USER_REQUESTED_STOP => MOI.INTERRUPTED,
+    MadNLPCore.INTERNAL_ERROR => MOI.OTHER_ERROR,
+    MadNLPCore.INVALID_NUMBER_OBJECTIVE => MOI.INVALID_MODEL,
+    MadNLPCore.INVALID_NUMBER_GRADIENT => MOI.INVALID_MODEL,
+    MadNLPCore.INVALID_NUMBER_CONSTRAINTS => MOI.INVALID_MODEL,
+    MadNLPCore.INVALID_NUMBER_JACOBIAN => MOI.INVALID_MODEL,
+    MadNLPCore.INVALID_NUMBER_HESSIAN_LAGRANGIAN => MOI.INVALID_MODEL,
 )
 
 function MOI.get(optimizer::Optimizer, ::MOI.TerminationStatus)
@@ -301,7 +301,7 @@ function MOI.get(optimizer::Optimizer, attr::MOI.DualStatus)
         return MOI.FEASIBLE_POINT
     elseif status == MOI.ALMOST_LOCALLY_SOLVED
         return MOI.NEARLY_FEASIBLE_POINT
-    elseif status == MadNLP.INFEASIBLE_PROBLEM_DETECTED
+    elseif status == MadNLPCore.INFEASIBLE_PROBLEM_DETECTED
         return MOI.INFEASIBLE_POINT
     else
         return MOI.UNKNOWN_RESULT_STATUS
@@ -376,13 +376,16 @@ function MOI.get(
     },
 }
     MOI.check_result_index_bounds(model, attr)
-    if S <: MOI.GreaterThan{Float64}
-        return model.stats.multipliers_L[ci.value]
+    dual = if S <: MOI.GreaterThan{Float64}
+        model.stats.multipliers_L[ci.value]
     elseif S <: MOI.LessThan{Float64}
-        return -model.stats.multipliers_U[ci.value]
+        -model.stats.multipliers_U[ci.value]
     else
-        return model.stats.multipliers_L[ci.value] - model.stats.multipliers_U[ci.value]
+        model.stats.multipliers_L[ci.value] - model.stats.multipliers_U[ci.value]
     end
+    # The bound multipliers of a maximization problem have the sign of the
+    # constraint multipliers, which is opposite to the MOI convention.
+    return _dual_multiplier(model) * dual
 end
 
 end

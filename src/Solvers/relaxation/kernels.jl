@@ -1,4 +1,4 @@
-function MadNLP.get_average_complementarity(solver::RelaxationSolver{T}) where {T}
+function MadNLPCore.get_average_complementarity(solver::RelaxationSolver{T}) where {T}
     ipm = solver.ipm
     mpcc = solver.mpcc
     ncc = ipm.nlb + ipm.nub + get_ncc(mpcc)
@@ -7,13 +7,13 @@ function MadNLP.get_average_complementarity(solver::RelaxationSolver{T}) where {
     # We know mpcc is in vertical form, therefore:
     # TODO(@anton) add view for x1, x2
     cc_pr = @views dot(
-        MadNLP.variable(ipm.x)[solver.ind_cc1] - MadNLP.variable(ipm.xl)[solver.ind_cc1],
-        MadNLP.variable(ipm.x)[solver.ind_cc2] - MadNLP.variable(ipm.xl)[solver.ind_cc2],
+        MadNLPCore.variable(ipm.x)[solver.ind_cc1] - MadNLPCore.variable(ipm.xl)[solver.ind_cc1],
+        MadNLPCore.variable(ipm.x)[solver.ind_cc2] - MadNLPCore.variable(ipm.xl)[solver.ind_cc2],
     )
     return (cc_lb + cc_ub + cc_pr)/ncc
 end
 
-function MadNLP.get_min_complementarity(solver::RelaxationSolver{T}) where {T}
+function MadNLPCore.get_min_complementarity(solver::RelaxationSolver{T}) where {T}
     ipm = solver.ipm
     mpcc = solver.mpcc
     cc_lb = mapreduce(
@@ -36,10 +36,10 @@ function MadNLP.get_min_complementarity(solver::RelaxationSolver{T}) where {T}
     cc_pr = @views mapreduce(
         (x1, xl1, x2, x2l) -> (x1-xl1)*(x2-x2l),
         min,
-        MadNLP.variable(ipm.x)[solver.ind_cc1],
-        MadNLP.variable(ipm.xl)[solver.ind_cc1],
-        MadNLP.variable(ipm.x)[solver.ind_cc2],
-        MadNLP.variable(ipm.xl)[solver.ind_cc2],
+        MadNLPCore.variable(ipm.x)[solver.ind_cc1],
+        MadNLPCore.variable(ipm.xl)[solver.ind_cc1],
+        MadNLPCore.variable(ipm.x)[solver.ind_cc2],
+        MadNLPCore.variable(ipm.xl)[solver.ind_cc2],
         init = T(Inf),
     )
     return min(cc_lb, cc_ub, cc_pr)
@@ -64,14 +64,14 @@ function estimate_mpec_multipliers(solver::RelaxationSolver{T}) where {T}
         cc2 = ind_cc2[ii]
         cc1_orig = ind_cc1_orig[ii]
         cc2_orig = ind_cc2_orig[ii]
-        x1 = MadNLP.variable(ipm.x)[cc1] - get_lvar(mpcc)[cc1_orig]
-        z1 = MadNLP.variable(ipm.zl)[cc1]
-        x2 = MadNLP.variable(ipm.x)[cc2] - get_lvar(mpcc)[cc2_orig]
-        z2 = MadNLP.variable(ipm.zl)[cc2]
-        zs = MadNLP.slack(ipm.zu)[end-ncc+ii]
+        x1 = MadNLPCore.variable(ipm.x)[cc1] - get_lvar(mpcc)[cc1_orig]
+        z1 = MadNLPCore.variable(ipm.zl)[cc1]
+        x2 = MadNLPCore.variable(ipm.x)[cc2] - get_lvar(mpcc)[cc2_orig]
+        z2 = MadNLPCore.variable(ipm.zl)[cc2]
+        zs = MadNLPCore.slack(ipm.zu)[end-ncc+ii]
 
-        f1 = MadNLP.variable(ipm.f)[cc1]
-        f2 = MadNLP.variable(ipm.f)[cc2]
+        f1 = MadNLPCore.variable(ipm.f)[cc1]
+        f2 = MadNLPCore.variable(ipm.f)[cc2]
         jac1 = ipm.jacl[cc1]
         jac2 = ipm.jacl[cc2]
 

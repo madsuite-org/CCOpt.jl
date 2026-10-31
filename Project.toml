@@ -11,7 +11,8 @@ authors = [
 DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 MPCCModels = "cbaba3ef-cedb-4e5a-9903-71bbac24a74a"
-MadNLP = "2621e9c9-9eb4-46b1-8089-e8c72242dfb6"
+MadCore = "a65213e2-99b2-4dc2-8349-7a266ca2b67f"
+MadNLPCore = "38486723-7c71-48b9-ad12-dc22a86097e8"
 NLPModels = "a4795742-8479-5a88-8948-cc11e1c8c1a6"
 Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 Serialization = "9e88b42a-f829-5b0c-bbe9-9e923198166b"
@@ -29,12 +30,17 @@ CCOptGurobi = ["Gurobi"]
 CCOptHiGHS = ["HiGHS"]
 CCOptMathOptInterface = ["MathOptComplements", "NLPModelsJuMP"]
 
+[sources]
+MadCore = {url = "https://github.com/madsuite-org/MadNLP.jl", rev = "madcore-split", subdir = "MadCore"}
+MadNLPCore = {url = "https://github.com/madsuite-org/MadNLP.jl", rev = "madcore-split", subdir = "MadNLPCore"}
+
 [compat]
 DataStructures = "0.18.22"
 Gurobi = "1.7"
 HiGHS = "1.18"
 LinearAlgebra = "1.10"
-MadNLP = "0.10"
+MadCore = "0.1"
+MadNLPCore = "0.1"
 MPCCModels = "0.1.0"
 MathOptComplements = "0.1"
 NLPModels = "0.21.4"

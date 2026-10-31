@@ -75,8 +75,8 @@ function update_sigma!(
     ipm = solver.ipm
     rnlp = ipm.nlp
     ncc = get_ncc(solver.mpcc)
-    sc = MadNLP.get_sc(ipm.zl_r, ipm.zu_r, T(ipm.opt.s_max))
-    inf_compl_mu = MadNLP.get_inf_compl(
+    sc = MadNLPCore.get_sc(ipm.zl_r, ipm.zu_r, T(ipm.opt.s_max))
+    inf_compl_mu = MadNLPCore.get_inf_compl(
         ipm.x_lr,
         ipm.xl_r,
         ipm.zl_r,
@@ -107,7 +107,7 @@ function update_sigma!(
                 mapreduce((c)->abs(c-sigma_new), max, ipm.c[(end-ncc+1):end]; init = 0)
         end
         inf_pr = max(inf_pr, inf_relaxed_cc)
-        inf_compl_mu = MadNLP.get_inf_compl(
+        inf_compl_mu = MadNLPCore.get_inf_compl(
             ipm.x_lr,
             ipm.xl_r,
             ipm.zl_r,
@@ -137,18 +137,18 @@ function update_sigma!(
     (@view ipm.c[(end-ncc+1):end]) .+= get_relaxation(rnlp)
     # Calculate mean primal complementarity
     cc_pr = @views dot(
-        MadNLP.variable(ipm.x)[solver.ind_cc1] - MadNLP.variable(ipm.xl)[solver.ind_cc1],
-        MadNLP.variable(ipm.x)[solver.ind_cc2] - MadNLP.variable(ipm.xl)[solver.ind_cc2],
+        MadNLPCore.variable(ipm.x)[solver.ind_cc1] - MadNLPCore.variable(ipm.xl)[solver.ind_cc1],
+        MadNLPCore.variable(ipm.x)[solver.ind_cc2] - MadNLPCore.variable(ipm.xl)[solver.ind_cc2],
     )
     mean_cc = cc_pr/ncc
     # Calculate minimum primal complementarity
     min_cc_pr = @views mapreduce(
         (x1, xl1, x2, x2l) -> (x1-xl1)*(x2-x2l),
         min,
-        MadNLP.variable(ipm.x)[solver.ind_cc1],
-        MadNLP.variable(ipm.xl)[solver.ind_cc1],
-        MadNLP.variable(ipm.x)[solver.ind_cc2],
-        MadNLP.variable(ipm.xl)[solver.ind_cc2],
+        MadNLPCore.variable(ipm.x)[solver.ind_cc1],
+        MadNLPCore.variable(ipm.xl)[solver.ind_cc1],
+        MadNLPCore.variable(ipm.x)[solver.ind_cc2],
+        MadNLPCore.variable(ipm.xl)[solver.ind_cc2],
         init = T(Inf),
     )
     # Calculate the factor to multiply the mean complementarity by.
@@ -180,18 +180,18 @@ function kkt_residual_norm(
     # Reset bounds:
     # NOTE(@anton): HERE BE DRAGONS! Due to using the original lvars we need to use two different
     #               index sets, due to fixed variable treatment
-    MadNLP.variable(ipm.xl)[ind_cc1] .= @view(get_lvar(mpcc)[get_ind_cc1(mpcc)]) .- δ1
-    MadNLP.variable(ipm.xl)[ind_cc2] .= @view(get_lvar(mpcc)[get_ind_cc2(mpcc)]) .- δ2
-    px = MadNLP.primal(ipm.p)
-    x = MadNLP.primal(ipm.x)
-    f = MadNLP.primal(ipm.f)
-    xl = MadNLP.primal(ipm.xl)
-    xu = MadNLP.primal(ipm.xu)
-    zl = MadNLP.full(ipm.zl)
-    zu = MadNLP.full(ipm.zu)
-    py = MadNLP.dual(ipm.p)
-    pzl = MadNLP.dual_lb(ipm.p)
-    pzu = MadNLP.dual_ub(ipm.p)
+    MadNLPCore.variable(ipm.xl)[ind_cc1] .= @view(get_lvar(mpcc)[get_ind_cc1(mpcc)]) .- δ1
+    MadNLPCore.variable(ipm.xl)[ind_cc2] .= @view(get_lvar(mpcc)[get_ind_cc2(mpcc)]) .- δ2
+    px = MadNLPCore.primal(ipm.p)
+    x = MadNLPCore.primal(ipm.x)
+    f = MadNLPCore.primal(ipm.f)
+    xl = MadNLPCore.primal(ipm.xl)
+    xu = MadNLPCore.primal(ipm.xu)
+    zl = MadNLPCore.full(ipm.zl)
+    zu = MadNLPCore.full(ipm.zu)
+    py = MadNLPCore.dual(ipm.p)
+    pzl = MadNLPCore.dual_lb(ipm.p)
+    pzu = MadNLPCore.dual_ub(ipm.p)
     c = ipm.c
 
     px .= .-f .+ zl .- zu .- ipm.jacl
@@ -217,8 +217,8 @@ function update_sigma!(
     r = kkt_residual_norm(rnlp, solver, rnlp.δ1opt, rnlp.δ2opt, rnlp.σopt) # kkt norm
     rl = r^(1+relax.tau)
     ru = r^(1-relax.tau)
-    MadNLP.variable(ipm.xl)[ind_cc1] .= @view(get_lvar(mpcc)[get_ind_cc1(mpcc)]) .- rnlp.δ1
-    MadNLP.variable(ipm.xl)[ind_cc2] .= @view(get_lvar(mpcc)[get_ind_cc2(mpcc)]) .- rnlp.δ2
+    MadNLPCore.variable(ipm.xl)[ind_cc1] .= @view(get_lvar(mpcc)[get_ind_cc1(mpcc)]) .- rnlp.δ1
+    MadNLPCore.variable(ipm.xl)[ind_cc2] .= @view(get_lvar(mpcc)[get_ind_cc2(mpcc)]) .- rnlp.δ2
     updated = false
     (@view ipm.c[(end-ncc+1):end]) .+= rnlp.σ
     for ii in 1:ncc
@@ -232,7 +232,7 @@ function update_sigma!(
         # These are the rules from
         if nu1 > ru
             rnlp.δ1[ii] = min(relax.kappa*rnlp.δ1[ii], rl)
-            MadNLP.variable(ipm.xl)[cc1] = get_lvar(mpcc)[cc1_orig] - rnlp.δ1[ii]
+            MadNLPCore.variable(ipm.xl)[cc1] = get_lvar(mpcc)[cc1_orig] - rnlp.δ1[ii]
             rnlp.δ1opt[ii] = 0.0
             updated = true
         else
@@ -241,7 +241,7 @@ function update_sigma!(
 
         if nu2 > ru
             rnlp.δ2[ii] = min(relax.kappa*rnlp.δ2[ii], rl)
-            MadNLP.variable(ipm.xl)[cc2] = get_lvar(mpcc)[cc2_orig] - rnlp.δ2[ii]
+            MadNLPCore.variable(ipm.xl)[cc2] = get_lvar(mpcc)[cc2_orig] - rnlp.δ2[ii]
             rnlp.δ2opt[ii] = 0.0
             updated = true
         else
@@ -264,25 +264,25 @@ function update_sigma!(
             cc2 = ind_cc2[ii]
             cc1_orig = get_ind_cc1(mpcc)[ii]
             cc2_orig = get_ind_cc2(mpcc)[ii]
-            x1 = MadNLP.variable(ipm.x)[cc1] - get_lvar(mpcc)[cc1_orig]
-            x2 = MadNLP.variable(ipm.x)[cc2] - get_lvar(mpcc)[cc2_orig]
+            x1 = MadNLPCore.variable(ipm.x)[cc1] - get_lvar(mpcc)[cc1_orig]
+            x2 = MadNLPCore.variable(ipm.x)[cc2] - get_lvar(mpcc)[cc2_orig]
 
             if x1 <= 0 # we are lower bound infeasible:
                 max_decrease =
                     (
                         relax.k_ftb
-                    )*(MadNLP.variable(ipm.x)[cc1] - MadNLP.variable(ipm.xl)[cc1])
+                    )*(MadNLPCore.variable(ipm.x)[cc1] - MadNLPCore.variable(ipm.xl)[cc1])
                 rnlp.δ1[ii] = max(relax.kappa*rnlp.δ1[ii], rnlp.δ1[ii]-max_decrease)
-                MadNLP.variable(ipm.xl)[cc1] = get_lvar(mpcc)[cc1_orig] - rnlp.δ1[ii]
+                MadNLPCore.variable(ipm.xl)[cc1] = get_lvar(mpcc)[cc1_orig] - rnlp.δ1[ii]
                 updated = true
             end
             if x2 <= 0 # we are lower bound infeasible:
                 max_decrease =
                     (
                         relax.k_ftb
-                    )*(MadNLP.variable(ipm.x)[cc2] - MadNLP.variable(ipm.xl)[cc2])
+                    )*(MadNLPCore.variable(ipm.x)[cc2] - MadNLPCore.variable(ipm.xl)[cc2])
                 rnlp.δ2[ii] = max(relax.kappa*rnlp.δ2[ii], rnlp.δ2[ii]-max_decrease)
-                MadNLP.variable(ipm.xl)[cc2] = get_lvar(mpcc)[cc2_orig] - rnlp.δ2[ii]
+                MadNLPCore.variable(ipm.xl)[cc2] = get_lvar(mpcc)[cc2_orig] - rnlp.δ2[ii]
                 updated = true
             end
             if x1 >= 0 && x2 >= 0 && x1*x2 >= solver.ipm.opt.tol
@@ -344,18 +344,18 @@ function init_sigma!(
     (@view ipm.c[(end-ncc+1):end]) .+= get_relaxation(rnlp)
     # Calculate mean primal complementarity
     cc_pr = @views dot(
-        MadNLP.variable(ipm.x)[solver.ind_cc1] - MadNLP.variable(ipm.xl)[solver.ind_cc1],
-        MadNLP.variable(ipm.x)[solver.ind_cc2] - MadNLP.variable(ipm.xl)[solver.ind_cc2],
+        MadNLPCore.variable(ipm.x)[solver.ind_cc1] - MadNLPCore.variable(ipm.xl)[solver.ind_cc1],
+        MadNLPCore.variable(ipm.x)[solver.ind_cc2] - MadNLPCore.variable(ipm.xl)[solver.ind_cc2],
     )
     mean_cc = cc_pr/ncc
     # Calculate minimum primal complementarity
     min_cc_pr = @views mapreduce(
         (x1, xl1, x2, x2l) -> (x1-xl1)*(x2-x2l),
         min,
-        MadNLP.variable(ipm.x)[solver.ind_cc1],
-        MadNLP.variable(ipm.xl)[solver.ind_cc1],
-        MadNLP.variable(ipm.x)[solver.ind_cc2],
-        MadNLP.variable(ipm.xl)[solver.ind_cc2],
+        MadNLPCore.variable(ipm.x)[solver.ind_cc1],
+        MadNLPCore.variable(ipm.xl)[solver.ind_cc1],
+        MadNLPCore.variable(ipm.x)[solver.ind_cc2],
+        MadNLPCore.variable(ipm.xl)[solver.ind_cc2],
         init = T(Inf),
     )
     # Calculate the factor to multiply the mean complementarity by.

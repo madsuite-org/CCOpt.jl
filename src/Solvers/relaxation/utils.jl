@@ -9,7 +9,7 @@ function CCOptExecutionStats(solver::RelaxationSolver)
     zx2 = similar(VT, ncc)
     c = similar(VT, m)
     y = similar(VT, m)
-    n = MadNLP.get_nvar(solver.ipm.nlp)
+    n = MadNLPCore.get_nvar(solver.ipm.nlp)
     m = get_ncon(solver.mpcc)
     ind_cc1 = solver.ind_cc1
     ind_cc2 = solver.ind_cc2
@@ -18,7 +18,7 @@ function CCOptExecutionStats(solver::RelaxationSolver)
         solver.ipm.opt,
         solver.opts,
         solver.ipm.status,
-        MadNLP.unpack_obj(solver.ipm.cb, solver.ipm.obj_val),
+        MadNLPCore.unpack_obj(solver.ipm.cb, solver.ipm.obj_val),
         x,
         c,
         y,
@@ -36,7 +36,7 @@ end
 
 # TODO(@anton) this is a hack, fix it
 function SolverCore.getStatus(result::CCOptExecutionStats)
-    return MadNLP.get_status_output(result.status, result.options)
+    return MadNLPCore.get_status_output(result.status, result.options)
 end
 
 function log_iter(
@@ -51,14 +51,14 @@ function log_iter(
     ncc = get_ncc(solver.mpcc)
 
     k = ipm.cnt.k
-    x0 = MadNLP.variable(ipm.x)[get_ind_x(solver.mpcc)]
-    x1 = MadNLP.variable(ipm.x)[solver.ind_cc1]
-    x2 = MadNLP.variable(ipm.x)[solver.ind_cc2]
-    s = MadNLP.slack(ipm.x)[(end-ncc+1):end]
+    x0 = MadNLPCore.variable(ipm.x)[get_ind_x(solver.mpcc)]
+    x1 = MadNLPCore.variable(ipm.x)[solver.ind_cc1]
+    x2 = MadNLPCore.variable(ipm.x)[solver.ind_cc2]
+    s = MadNLPCore.slack(ipm.x)[(end-ncc+1):end]
 
-    z1 = MadNLP.variable(ipm.zl)[solver.ind_cc1]
-    z2 = MadNLP.variable(ipm.zl)[solver.ind_cc2]
-    zs = MadNLP.slack(ipm.zu)[(end-ncc+1):end]
+    z1 = MadNLPCore.variable(ipm.zl)[solver.ind_cc1]
+    z2 = MadNLPCore.variable(ipm.zl)[solver.ind_cc2]
+    zs = MadNLPCore.slack(ipm.zu)[(end-ncc+1):end]
 
     y = ipm.y
 
@@ -73,11 +73,11 @@ function log_iter(
     inf_pr = ipm.inf_pr
     inf_du = ipm.inf_du
     inf_compl = ipm.inf_compl
-    inf_rnlp = MadNLP.get_inf_pr(ipm.c)
+    inf_rnlp = MadNLPCore.get_inf_pr(ipm.c)
     inf_pr_cc = solver.inf_pr_cc
 
-    theta = MadNLP.get_theta(ipm.c)
-    varphi = MadNLP.get_varphi(ipm.obj_val, ipm.x_lr, ipm.xl_r, ipm.xu_r, ipm.x_ur, ipm.mu)
+    theta = MadNLPCore.get_theta(ipm.c)
+    varphi = MadNLPCore.get_varphi(ipm.obj_val, ipm.x_lr, ipm.xl_r, ipm.xu_r, ipm.x_ur, ipm.mu)
 
     mu = ipm.mu
     sigma = get_relaxation(solver.rnlp)
@@ -144,19 +144,19 @@ function get_inf_pr_cc(solver::RelaxationSolver{T}) where {T}
         map!(
             (a, la, b, lb) -> max((a-la)*(b-lb), la-a, lb-b),
             solver._cc1,
-            MadNLP.variable(solver.ipm.x)[solver.ind_cc1],
+            MadNLPCore.variable(solver.ipm.x)[solver.ind_cc1],
             get_lvar(solver.mpcc)[get_ind_cc1(solver.mpcc)],
-            MadNLP.variable(solver.ipm.x)[solver.ind_cc2],
+            MadNLPCore.variable(solver.ipm.x)[solver.ind_cc2],
             get_lvar(solver.mpcc)[get_ind_cc2(solver.mpcc)],
         )
     end
     return reduce(max, solver._cc1; init = zero(T))
 end
 
-function MadNLP.print_iter(solver::RelaxationSolver; is_resto = false)
+function MadNLPCore.print_iter(solver::RelaxationSolver; is_resto = false)
     ipm = solver.ipm
     obj_scale = ipm.cb.obj_scale[]
-    mod(ipm.cnt.k, 10)==0 && MadNLP.@info(
+    mod(ipm.cnt.k, 10)==0 && MadNLPCore.@info(
         ipm.logger,
         @sprintf(
             "iter    objective    inf_pr  inf_rnlp   inf_du inf_comp lg(mu)  ||d||  lg(rg) alpha_du alpha_pr  ls lg(σ)   inf_cc"
@@ -174,7 +174,7 @@ function MadNLP.print_iter(solver::RelaxationSolver; is_resto = false)
         inf_compl = ipm.inf_compl
         mu = log10(ipm.mu)
     end
-    MadNLP.@info(
+    MadNLPCore.@info(
         ipm.logger,
         @sprintf(
             "%4i%s% 10.7e %6.2e %6.2e %6.2e %7.2e %5.1f %6.2e %s %6.2e %6.2e%s  %i %5.1f  %6.2e",
@@ -182,11 +182,11 @@ function MadNLP.print_iter(solver::RelaxationSolver; is_resto = false)
             is_resto ? "r" : " ",
             ipm.obj_val/obj_scale,
             inf_pr,
-            MadNLP.get_inf_pr(ipm.c),
+            MadNLPCore.get_inf_pr(ipm.c),
             inf_du,
             inf_compl,
             mu,
-            ipm.cnt.k == 0 ? 0.0 : norm(MadNLP.primal(ipm.d), Inf),
+            ipm.cnt.k == 0 ? 0.0 : norm(MadNLPCore.primal(ipm.d), Inf),
             ipm.del_w == 0 ? "   - " : @sprintf("%5.1f", log(10, ipm.del_w)),
             ipm.alpha_z,
             ipm.alpha,

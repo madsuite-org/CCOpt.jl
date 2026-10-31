@@ -1,11 +1,20 @@
 [deps]
+CCOpt = "6689419a-93c1-455a-8ac6-77991ec4f86b"
 ADNLPModels = "54578032-b7ea-4c30-94aa-7cbd1cce6c9a"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 MPCCModels = "cbaba3ef-cedb-4e5a-9903-71bbac24a74a"
+MadCore = "a65213e2-99b2-4dc2-8349-7a266ca2b67f"
 MadNLP = "2621e9c9-9eb4-46b1-8089-e8c72242dfb6"
+MadNLPCore = "38486723-7c71-48b9-ad12-dc22a86097e8"
 MathOptComplements = "3144fb79-1414-4d28-b1d1-63dadd798e24"
 MathOptInterface = "b8f27783-ece8-5eb3-8dc8-9495eed66fee"
 NLPModels = "a4795742-8479-5a88-8948-cc11e1c8c1a6"
 NLPModelsJuMP = "792afdf1-32c1-5681-94e0-d7bf7a5df49e"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[sources]
+CCOpt = {path = ".."}
+MadCore = {url = "https://github.com/madsuite-org/MadNLP.jl", rev = "madcore-split", subdir = "MadCore"}
+MadNLPCore = {url = "https://github.com/madsuite-org/MadNLP.jl", rev = "madcore-split", subdir = "MadNLPCore"}
+MadNLP = {url = "https://github.com/madsuite-org/MadNLP.jl", rev = "madcore-split", subdir = "MadNLP"}

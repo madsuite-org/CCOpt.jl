@@ -3,7 +3,7 @@ using NLPModels, MPCCModels, SolverCore, LinearAlgebra, SparseArrays
 using Serialization
 using Printf
 using DataStructures: CircularBuffer, isfull
-import MadNLP
+import MadNLPCore
 
 include("types.jl")
 include("LinearModel.jl")

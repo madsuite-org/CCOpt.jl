@@ -1,5 +1,5 @@
 @kwdef mutable struct CCOptCounters
-    counters::MadNLP.MadNLPCounters
+    counters::MadNLPCore.MadNLPCounters
     start_time::Float64 = 0.0
     init_time::Float64 = 0.0
     solve_time::Float64 = 0.0
@@ -8,9 +8,9 @@
 end
 
 mutable struct CCOptExecutionStats{T,VT} <: AbstractExecutionStats
-    options::MadNLP.AbstractOptions
-    mpcc_options::MadNLP.AbstractOptions
-    status::MadNLP.Status
+    options::MadNLPCore.AbstractOptions
+    mpcc_options::MadNLPCore.AbstractOptions
+    status::MadNLPCore.Status
     objective::T
     solution::VT
     constraints::VT

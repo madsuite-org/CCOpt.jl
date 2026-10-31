@@ -2,7 +2,7 @@
 mutable struct HomotopySolverStats{T,VT}
     # TODO(@anton) what needs to live here
     # TODO(@anton) Should subclass AbstractExecutionStats probably
-    status::MadNLP.Status           # Return status from the HomotopySolver
+    status::MadNLPCore.Status           # Return status from the HomotopySolver
     solution::VT             # solution for primal variables x
     objective::T             # objective achieved
     multipliers::VT          # multipliers for nonlinear constraints (including relaxed complementarities)
@@ -18,7 +18,7 @@ end
 
 function HomotopySolverStats(mpcc::AbstractMPCCModel{T,VT}) where {T,VT}
     return HomotopySolverStats(
-        MadNLP.INITIAL,
+        MadNLPCore.INITIAL,
         VT(undef, get_nvar(mpcc)),
         zero(T),
         VT(undef, get_ncon(mpcc)),
@@ -43,8 +43,8 @@ end
     max_inner_iter::Int = 9000
 
     # TODO(@anton) Do we want an Int here? A symbol (e.g. `:info`, `:warn`, `:debug`, etc.)?
-    print_level::MadNLP.LogLevels = MadNLP.INFO
-    file_print_level::MadNLP.LogLevels = MadNLP.INFO
+    print_level::MadNLPCore.LogLevels = MadNLPCore.INFO
+    file_print_level::MadNLPCore.LogLevels = MadNLPCore.INFO
     output_file::String = ""
 
     # Decreased bound push for followup iterations
@@ -86,7 +86,7 @@ mutable struct HomotopySolver{M,S,T,VT} <: AbstractMPCCSolver{M,S,T,VT}
 
     opts::HomotopySolverOptions
     stats::HomotopySolverStats
-    logger::MadNLP.MadNLPLogger
+    logger::MadNLPCore.MadNLPLogger
 
     start_time::Float64
 
@@ -102,14 +102,14 @@ end
 function HomotopySolver(mpcc::AbstractMPCCModel, S::Type, opts::HomotopySolverOptions)
     nlp = ScholtesRelaxation(mpcc)
 
-    if S<:MadNLP.AbstractMadNLPSolver
+    if S<:MadNLPCore.AbstractMadNLPSolver
         solver = S(nlp; opts.nlp_solver_options...)
     else
         solver = S(nlp)
     end
     stats = HomotopySolverStats(mpcc)
 
-    logger = MadNLP.MadNLPLogger(
+    logger = MadNLPCore.MadNLPLogger(
         print_level = opts.print_level,
         file_print_level = opts.file_print_level,
         file = opts.output_file == "" ? nothing : open(opts.output_file, "w+"),
@@ -166,7 +166,7 @@ end
 function solve_rnlp(
     solver::HomotopySolver{M,S,T,VT},
     n::Int,
-) where {M,S<:MadNLP.AbstractMadNLPSolver,T,VT}
+) where {M,S<:MadNLPCore.AbstractMadNLPSolver,T,VT}
     # TODO(@anton) copying here seems expensiveish, perhaps store a "working settings" copy.
     nlp_opts_i = copy(solver.opts.nlp_solver_options)
 
@@ -183,7 +183,7 @@ function solve_rnlp(
         solver.opts.max_inner_iter-solver.stats.iter,
     )
     nlp_opts_i[:max_iter] = max_iter
-    return MadNLP.solve!(solver.solver; nlp_opts_i...)
+    return MadNLPCore.solve!(solver.solver; nlp_opts_i...)
 end
 
 function set_silent!(
@@ -194,47 +194,47 @@ end
 
 function set_silent!(
     solver::HomotopySolver{M,S,T,VT},
-) where {M,S<:MadNLP.AbstractMadNLPSolver,T,VT}
-    return solver.opts.nlp_solver_options[:print_level] = MadNLP.ERROR
+) where {M,S<:MadNLPCore.AbstractMadNLPSolver,T,VT}
+    return solver.opts.nlp_solver_options[:print_level] = MadNLPCore.ERROR
 end
 
 function nlp_solve_acceptable(nlp_stats::AbstractExecutionStats)
     return nlp_stats.status ∈ [:first_order, :acceptable, :small_step]
 end
 
-function nlp_solve_acceptable(nlp_stats::MadNLP.MadNLPExecutionStats)
+function nlp_solve_acceptable(nlp_stats::MadNLPCore.MadNLPExecutionStats)
     return nlp_stats.status ∈ [
-        MadNLP.SOLVE_SUCCEEDED,
-        MadNLP.SOLVED_TO_ACCEPTABLE_LEVEL,
-        MadNLP.SEARCH_DIRECTION_BECOMES_TOO_SMALL,
+        MadNLPCore.SOLVE_SUCCEEDED,
+        MadNLPCore.SOLVED_TO_ACCEPTABLE_LEVEL,
+        MadNLPCore.SEARCH_DIRECTION_BECOMES_TOO_SMALL,
     ]
 end
 
 # TODO(@anton) I think we _really_ should look into standardizing on Solver core
 #              in MadNLP but this would require buyin from more of the MadNLP dev team
 const SOLVER_CORE_TO_MPCC_SOLVER_STATUS = Dict(
-    :exception => MadNLP.INTERNAL_ERROR,
-    :first_order => MadNLP.SOLVE_SUCCEEDED,
-    :acceptable => MadNLP.SOLVED_TO_ACCEPTABLE_LEVEL,
-    :infeasible => MadNLP.INFEASIBLE_PROBLEM_DETECTED,
-    :max_eval => MadNLP.MAXIMUM_ITERATIONS_EXCEEDED,
-    :max_iter => MadNLP.MAXIMUM_ITERATIONS_EXCEEDED,
-    :max_time => MadNLP.MAXIMUM_WALLTIME_EXCEEDED,
-    :neg_pred => MadNLP.INTERNAL_ERROR,
-    :not_desc => MadNLP.INTERNAL_ERROR,
-    :small_residual => MadNLP.INTERNAL_ERROR,
-    :small_step => MadNLP.SEARCH_DIRECTION_BECOMES_TOO_SMALL,
-    :stalled => MadNLP.INTERNAL_ERROR,
-    :unbounded => MadNLP.INTERNAL_ERROR,
-    :unknown => MadNLP.INTERNAL_ERROR,
-    :user => MadNLP.USER_REQUESTED_STOP,
+    :exception => MadNLPCore.INTERNAL_ERROR,
+    :first_order => MadNLPCore.SOLVE_SUCCEEDED,
+    :acceptable => MadNLPCore.SOLVED_TO_ACCEPTABLE_LEVEL,
+    :infeasible => MadNLPCore.INFEASIBLE_PROBLEM_DETECTED,
+    :max_eval => MadNLPCore.MAXIMUM_ITERATIONS_EXCEEDED,
+    :max_iter => MadNLPCore.MAXIMUM_ITERATIONS_EXCEEDED,
+    :max_time => MadNLPCore.MAXIMUM_WALLTIME_EXCEEDED,
+    :neg_pred => MadNLPCore.INTERNAL_ERROR,
+    :not_desc => MadNLPCore.INTERNAL_ERROR,
+    :small_residual => MadNLPCore.INTERNAL_ERROR,
+    :small_step => MadNLPCore.SEARCH_DIRECTION_BECOMES_TOO_SMALL,
+    :stalled => MadNLPCore.INTERNAL_ERROR,
+    :unbounded => MadNLPCore.INTERNAL_ERROR,
+    :unknown => MadNLPCore.INTERNAL_ERROR,
+    :user => MadNLPCore.USER_REQUESTED_STOP,
 )
 
 function convert_nlp_solve(nlp_stats::AbstractExecutionStats)
-    return get(SOLVER_CORE_TO_MPCC_SOLVER_STATUS, nlp_stats.status, MadNLP.INTERNAL_ERROR)
+    return get(SOLVER_CORE_TO_MPCC_SOLVER_STATUS, nlp_stats.status, MadNLPCore.INTERNAL_ERROR)
 end
 
-function convert_nlp_solve(nlp_stats::MadNLP.MadNLPExecutionStats)
+function convert_nlp_solve(nlp_stats::MadNLPCore.MadNLPExecutionStats)
     return nlp_stats.status
 end
 
@@ -246,7 +246,7 @@ end
 
 function reset_nlp_solver!(
     solver::HomotopySolver{M,S,T,VT},
-) where {M,S<:MadNLP.AbstractMadNLPSolver,T,VT}
+) where {M,S<:MadNLPCore.AbstractMadNLPSolver,T,VT}
     solver.solver.cnt.k = 0
     solver.solver.cnt.l = 0
     solver.solver.cnt.t = 0
@@ -265,8 +265,8 @@ end
 
 function update_times!(
     solver::HomotopySolver{M,S,T,VT},
-    nlp_stats::MadNLP.MadNLPExecutionStats,
-) where {M,S<:MadNLP.AbstractMadNLPSolver,T,VT}
+    nlp_stats::MadNLPCore.MadNLPExecutionStats,
+) where {M,S<:MadNLPCore.AbstractMadNLPSolver,T,VT}
     solver.stats.eval_function_time = nlp_stats.counters.eval_function_time
     solver.stats.linear_solver_time = nlp_stats.counters.linear_solver_time
     return solver.stats.iter += nlp_stats.iter
@@ -278,8 +278,8 @@ function print_headers(solver::HomotopySolver{M,S,T,VT}) where {M,S,T,VT}
         [:iter, :solver_status, :objective, :inf_cc, :nlp_iters],
         [Int, Symbol, T, T, Int],
     )
-    MadNLP.@info(solver.logger, "CCOpt Homotopy Solver")
-    MadNLP.@info(solver.logger, header)
+    MadNLPCore.@info(solver.logger, "CCOpt Homotopy Solver")
+    MadNLPCore.@info(solver.logger, header)
 end
 
 function print_outer_iter(solver::HomotopySolver)
@@ -292,7 +292,7 @@ function print_outer_iter(solver::HomotopySolver)
             solver.stats.nlp_stats[end].iter,
         ],
     )
-    MadNLP.@info(solver.logger, row)
+    MadNLPCore.@info(solver.logger, row)
 end
 
 ######################### Main loop #########################
@@ -325,7 +325,7 @@ function solve!(
     opts = solver.opts
 
     # TODO(@anton) Long term we may want a pre-process step for the options
-    if opts.print_level == MadNLP.ERROR
+    if opts.print_level == MadNLPCore.ERROR
         set_silent!(solver) # TODO(@anton) This is one of the options that madNLP doesn't respect on resolve :(
     end
 
@@ -368,7 +368,7 @@ function solve!(
     if converged
         stats.status = convert_nlp_solve(stats.nlp_stats[end])
     elseif ii > opts.N_homotopy
-        stats.status = MadNLP.MAXIMUM_ITERATIONS_EXCEEDED
+        stats.status = MadNLPCore.MAXIMUM_ITERATIONS_EXCEEDED
     end
     stats.solution = solver.x_k
     stats.multipliers = solver.y_k[1:get_ncon(mpcc)] # Unreliable

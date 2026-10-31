@@ -49,7 +49,7 @@ function regularize_Q!(solver::RelaxationSolver{T}) where {T}
         end
     end
     # We modify hess_raw so need to compress_hessian again.
-    MadNLP.compress_hessian!(kkt)
+    MadNLPCore.compress_hessian!(kkt)
     return regularized
 end
 
@@ -72,12 +72,12 @@ function unregularize_Q!(solver::RelaxationSolver{T}) where {T}
     kkt.hess_raw.V[(end-ncc+1):end] .=
         ipm.y[(end-ncc+1):end] .* cb.con_scale[(end-ncc+1):end] # TODO(@anton): this may allocate
     # We modify hess_raw so need to compress_hessian again.
-    MadNLP.compress_hessian!(kkt)
+    MadNLPCore.compress_hessian!(kkt)
     return regularized
 end
 
-function MadNLP.inertia_correction!(
-    inertia_corrector::MadNLP.InertiaBased,
+function MadNLPCore.inertia_correction!(
+    inertia_corrector::MadNLPCore.InertiaBased,
     solver::RelaxationSolver{T},
 ) where {T}
     ipm = solver.ipm
@@ -85,27 +85,27 @@ function MadNLP.inertia_correction!(
     ipm.del_w = del_w_prev = zero(T)
     ipm.del_c = del_c_prev = zero(T)
 
-    MadNLP.@trace(ipm.logger, "Inertia-based regularization started.")
+    MadNLPCore.@trace(ipm.logger, "Inertia-based regularization started.")
 
-    MadNLP.factorize_wrapper!(ipm)
-    num_pos, num_zero, num_neg = MadNLP.inertia(ipm.kkt.linear_solver)
+    MadNLPCore.factorize_wrapper!(ipm)
+    num_pos, num_zero, num_neg = MadNLPCore.inertia(ipm.kkt.linear_solver)
 
-    solve_status = if MadNLP.is_inertia_correct(ipm.kkt, num_pos, num_zero, num_neg)
+    solve_status = if MadNLPCore.is_inertia_correct(ipm.kkt, num_pos, num_zero, num_neg)
         # Try a backsolve. If the factorization has failed, solve_refine_wrapper returns false.
-        MadNLP.solve_refine_wrapper!(ipm.d, ipm, ipm.p, ipm._w4)
+        MadNLPCore.solve_refine_wrapper!(ipm.d, ipm, ipm.p, ipm._w4)
     else
         false
     end
 
     # Try to regularize
     if !solve_status && regularize_Q!(solver)
-        MadNLP.@trace(ipm.logger, "Trying to regularize out penalty.")
-        MadNLP.factorize_wrapper!(ipm)
-        num_pos, num_zero, num_neg = MadNLP.inertia(ipm.kkt.linear_solver)
+        MadNLPCore.@trace(ipm.logger, "Trying to regularize out penalty.")
+        MadNLPCore.factorize_wrapper!(ipm)
+        num_pos, num_zero, num_neg = MadNLPCore.inertia(ipm.kkt.linear_solver)
 
-        solve_status = if MadNLP.is_inertia_correct(ipm.kkt, num_pos, num_zero, num_neg)
+        solve_status = if MadNLPCore.is_inertia_correct(ipm.kkt, num_pos, num_zero, num_neg)
             # Try a backsolve. If the factorization has failed, solve_refine_wrapper returns false.
-            MadNLP.solve_refine_wrapper!(ipm.d, ipm, ipm.p, ipm._w4)
+            MadNLPCore.solve_refine_wrapper!(ipm.d, ipm, ipm.p, ipm._w4)
         else
             false
         end
@@ -116,7 +116,7 @@ function MadNLP.inertia_correction!(
         end
     end
     while !solve_status
-        MadNLP.@debug(ipm.logger, "Primal-dual perturbed.")
+        MadNLPCore.@debug(ipm.logger, "Primal-dual perturbed.")
 
         if n_trial == 0
             ipm.del_w =
@@ -131,7 +131,7 @@ function MadNLP.inertia_correction!(
                 ipm.opt.perturb_inc_fact
             if ipm.del_w>ipm.opt.max_hessian_perturbation
                 ipm.cnt.k+=1
-                MadNLP.@debug(
+                MadNLPCore.@debug(
                     ipm.logger,
                     "Primal regularization is too big. Switching to restoration phase."
                 )
@@ -142,15 +142,15 @@ function MadNLP.inertia_correction!(
             num_zero == 0 ? zero(T) :
             ipm.opt.jacobian_regularization_value *
             ipm.mu^(ipm.opt.jacobian_regularization_exponent)
-        MadNLP.regularize_diagonal!(ipm.kkt, ipm.del_w - del_w_prev, ipm.del_c - del_c_prev)
+        MadNLPCore.regularize_diagonal!(ipm.kkt, ipm.del_w - del_w_prev, ipm.del_c - del_c_prev)
         del_w_prev = ipm.del_w
         del_c_prev = ipm.del_c
 
-        MadNLP.factorize_wrapper!(ipm)
-        num_pos, num_zero, num_neg = MadNLP.inertia(ipm.kkt.linear_solver)
+        MadNLPCore.factorize_wrapper!(ipm)
+        num_pos, num_zero, num_neg = MadNLPCore.inertia(ipm.kkt.linear_solver)
 
-        solve_status = if MadNLP.is_inertia_correct(ipm.kkt, num_pos, num_zero, num_neg)
-            MadNLP.solve_refine_wrapper!(ipm.d, ipm, ipm.p, ipm._w4)
+        solve_status = if MadNLPCore.is_inertia_correct(ipm.kkt, num_pos, num_zero, num_neg)
+            MadNLPCore.solve_refine_wrapper!(ipm.d, ipm, ipm.p, ipm._w4)
         else
             false
         end
@@ -162,9 +162,9 @@ function MadNLP.inertia_correction!(
     return true
 end
 
-function MadNLP.inertia_correction!(
-    inertia_corrector::MadNLP.AbstractInertiaCorrector,
+function MadNLPCore.inertia_correction!(
+    inertia_corrector::MadNLPCore.AbstractInertiaCorrector,
     solver::RelaxationSolver{T},
 ) where {T}
-    return MadNLP.inertia_correction!(inertia_corrector, solver.ipm)
+    return MadNLPCore.inertia_correction!(inertia_corrector, solver.ipm)
 end

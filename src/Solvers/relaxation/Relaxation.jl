@@ -120,7 +120,7 @@ struct RelaxationIterate{T,VT}
 
     y::VT
 
-    p::MadNLP.UnreducedKKTVector{T,VT}
+    p::MadNLPCore.UnreducedKKTVector{T,VT}
 
     alpha_pr::T
     alpha_du::T
@@ -156,7 +156,7 @@ end
     T,
     RELAX<:AbstractRelaxationUpdate{T},
     EG<:AbstractEndgameStrategy{T},
-} <: MadNLP.AbstractOptions
+} <: MadNLPCore.AbstractOptions
     # Relaxation type
     relaxation::Type = ScholtesRelaxation
 
@@ -192,15 +192,15 @@ end
 
     # Output options
     output_file::String = ""
-    print_level::MadNLP.LogLevels = MadNLP.INFO
-    file_print_level::MadNLP.LogLevels = MadNLP.INFO
+    print_level::MadNLPCore.LogLevels = MadNLPCore.INFO
+    file_print_level::MadNLPCore.LogLevels = MadNLPCore.INFO
 
     # Store Iterations
     iterates_fname::String = ""
 end
 
 @kwdef mutable struct RelaxationCounters
-    counters::MadNLP.MadNLPCounters
+    counters::MadNLPCore.MadNLPCounters
     solver_time::Float64 = 0.0
 end
 
@@ -212,12 +212,12 @@ mutable struct RelaxationSolver{
     RNLP<:AbstractMPCCRelaxation{T,VT},
     RELAX<:AbstractRelaxationUpdate{T},
     EG<:AbstractEndgameStrategy{T},
-    SOLVER<:MadNLP.MadNLPSolver{T,VT},
+    SOLVER<:MadNLPCore.MadNLPSolver{T,VT},
 }
     const mpcc::MPCC
     const rnlp::RNLP
     const ipm::SOLVER
-    const logger::MadNLP.MadNLPLogger
+    const logger::MadNLPCore.MadNLPLogger
     const iterate_logger::IterateLogger
     const opts::RelaxationOptions{T,RELAX,EG}
     const cnt::CCOptCounters
@@ -240,7 +240,7 @@ function RelaxationSolver(
 ) where {T,VT}
     start_time = time()
     rnlp = solver_opts.relaxation(mpcc)
-    logger = MadNLP.MadNLPLogger(
+    logger = MadNLPCore.MadNLPLogger(
         print_level = solver_opts.print_level,
         file_print_level = solver_opts.file_print_level,
         file = solver_opts.output_file == "" ? nothing :
@@ -248,13 +248,13 @@ function RelaxationSolver(
     )
 
     if haskey(ipm_options, :bound_relax_factor)
-        ipm_options[:bound_relax_factor] == zero(T) || MadNLP.@warn(
+        ipm_options[:bound_relax_factor] == zero(T) || MadNLPCore.@warn(
             logger,
             "You have set a positive 'bound_relax_factor', this is probably a mistake! Allowing bound relaxation means complementarity variables are no longer strictly positive which can cause the algorithm to stall at non-physical, inaccurate solutions."
         )
-        ipm = MadNLP.MadNLPSolver(rnlp; ipm_options...)
+        ipm = MadNLPCore.MadNLPSolver(rnlp; ipm_options...)
     else
-        ipm = MadNLP.MadNLPSolver(rnlp; bound_relax_factor = zero(T), ipm_options...)
+        ipm = MadNLPCore.MadNLPSolver(rnlp; bound_relax_factor = zero(T), ipm_options...)
     end
     cnt = CCOptCounters(counters = ipm.cnt)
     initialize_relaxation(rnlp, ipm.opt.barrier.mu_init, solver_opts.delta_init)

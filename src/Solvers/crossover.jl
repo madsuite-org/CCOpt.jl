@@ -6,8 +6,8 @@ const CROSSOVER_STATUSES = Dict(
     :max_iter => "maximum iteration",
 )
 
-@kwdef struct CrossoverOptions{T,LPCC_OPTS<:MadNLP.AbstractOptions} <:
-              MadNLP.AbstractOptions
+@kwdef struct CrossoverOptions{T,LPCC_OPTS<:MadNLPCore.AbstractOptions} <:
+              MadNLPCore.AbstractOptions
     lpcc_solver_opts::LPCC_OPTS = CCOpt.RelaxationOptions()
     lpcc_solver_kwargs::NamedTuple = NamedTuple()
     bnlp_solver_kwargs::NamedTuple = NamedTuple()
@@ -48,12 +48,12 @@ function SolverCore.getStatus(stats::CrossoverExecutionStats)
 end
 
 # options for LPCC solving with Gurobi
-@kwdef struct GurobiLPCCSolverOptions{T} <: MadNLP.AbstractOptions
+@kwdef struct GurobiLPCCSolverOptions{T} <: MadNLPCore.AbstractOptions
     M::T = 1000.0
 end
 
 # options for LPCC solving with HiGHS
-@kwdef struct HiGHSLPCCSolverOptions{T} <: MadNLP.AbstractOptions
+@kwdef struct HiGHSLPCCSolverOptions{T} <: MadNLPCore.AbstractOptions
     M::T = 1000.0
 end
 
@@ -73,7 +73,7 @@ function solve_lpcc(
 
     y = Vector{Bool}(undef, get_ncc(lpcc))
     y .= comp_res_left(lpcc, stats.solution) .> comp_res_right(lpcc, stats.solution)
-    return stats.status == MadNLP.SOLVE_SUCCEEDED, stats, y
+    return stats.status == MadNLPCore.SOLVE_SUCCEEDED, stats, y
 end
 
 macro add_to_timer(cnt_expr, action_expr)
@@ -111,10 +111,10 @@ function crossover(
     bnlp = @add_to_timer cnt.construction_time BranchNLP(mpcc, y0)
     get_x0(bnlp) .= x0
 
-    bnlp_sol = @add_to_timer cnt.bnlp_time MadNLP.madnlp(bnlp; opts.bnlp_solver_kwargs...)
+    bnlp_sol = @add_to_timer cnt.bnlp_time MadNLPCore.madnlp(bnlp; opts.bnlp_solver_kwargs...)
     cnt.bnlp_iter += 1
 
-    if bnlp_sol.status != MadNLP.SOLVE_SUCCEEDED
+    if bnlp_sol.status != MadNLPCore.SOLVE_SUCCEEDED
         cnt.total_time = time() - cnt.start_time
         cnt.proj_time = cnt.total_time
         return CrossoverExecutionStats(opts, :proj_failed, obj(mpcc, x0), x0, y0, cnt)
@@ -183,7 +183,7 @@ function crossover(
         get_x0(bnlp) .= x_curr
         cnt.lpcc_iter += 1
 
-        bnlp_sol = @add_to_timer cnt.bnlp_time MadNLP.madnlp(
+        bnlp_sol = @add_to_timer cnt.bnlp_time MadNLPCore.madnlp(
             bnlp;
             bound_push = 1e-6,
             opts.bnlp_solver_kwargs...,
