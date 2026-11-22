@@ -3,7 +3,7 @@ In order to provide users of languages other and Julia use of CCOpt, we develope
 This tutorial walks you through the process of installing the required tools, modelling your first MPCC in CasADi, and using CCOpt to solve it.
 We will provide examples both for the Python and MATLAB interfaces for CasADi, and we assume that you have a working installation and a working knowledge of one of the two languages.
 
-    !!! info
+!!! info
     This tutorial also assumes that the user is on an `x86-64` Linux platform. We additionally support `x86-64` Windows platforms and both `x86-64` and `arm64` based macos platforms.
     Additional information for these platforms can be found in [Appendix A: other platforms](@ref).
 
@@ -47,7 +47,7 @@ Finally, add the installation to the library path:
 export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:<path-to-libMad-install>/libMad-ubuntu-x86_64-v0.0.12-casadi/lib"
 ```
 
-    !!! info
+!!! info
     Due to version conflicts between the host languages and Julia you may additionally need to preload specific versions of system libraries.
     #### Python
     ```shell
@@ -93,10 +93,10 @@ nlp = {
     "g": g,
 }
 
-x0=[2.0, 2.0, 2.0],
-lbx=[0.,0.,-np.inf],
-ubx=[np.inf, np.inf, np.inf],
-lbg=[1],
+x0=[2.0, 2.0, 2.0]
+lbx=[0.,0.,-np.inf]
+ubx=[np.inf, np.inf, np.inf]
+lbg=[1]
 ubg=[1]
 ```
 This generates all the symbolic variables, constrints, as well as the objective. Additionally we create the necessary bounds.
@@ -115,7 +115,7 @@ casadi_solver_opts = {
 ```
 In this case we have a complemntarity constraints between `x[0]` and `x[1]`.
 
-    !!! Note
+!!! note
     The vector `cc_pairs` is a ``n_{cc}\times 2`` vector and is zero indexed, in python _and_ in MATLAB!
 
 We then can pass options to the CCOpt solver, in the standard CasADi way. That is to say as dictionary entries in the options dictionary:
@@ -227,7 +227,7 @@ This path needs to then be added to the `PATH`, for example using the steps in [
 Installation on `x86-64` and `aarch64` apple platforms follows similarly to the process for linux platforms.
 The primary difference involves the use of `DYLD_LIBRARY_PATH` and `DYLD_PRELOAD` for setting up paths and library preload orders.
 
-    !!! warning 
+!!! warning 
     You will likely have to disable apple "System Integrity Protection" as otherwise, the `DYLD_LIBRARY_PATH` variable will be silently hidden from processes you run. 
     Alternatively you can use `otool` to set absolute paths for `libcasadi_nlpsol_ccopt.dylib` in your virtual environment `site-packages`.
     See this [blog post](https://briandfoy.github.io/macos-s-system-integrity-protection-sanitizes-your-environment/) for more details.
