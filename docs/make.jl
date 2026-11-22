@@ -15,7 +15,7 @@ makedocs(
     pages=[
         "Home" => "index.md",
         "Installation" => "installation.md",
-        "CasADi Tutorial" => "casadi_tutorial",
+        "CasADi Tutorial" => "casadi_tutorial.md",
     ],
 )
 
