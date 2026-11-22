@@ -103,7 +103,8 @@ This generates all the symbolic variables, constrints, as well as the objective.
 
 We then need to provide the CCOpt plugin with the information about the complementarity constraints.
 This is done by passing a list of pairs of indices, along with a list of complementarity types: `VARVAR=0`, `VARCON=1`, `CONVAR=2` `CONCON=3`.
-These correspond to complmentarity between two variables, a variable and an expression, or two expressions, and as such define which vector `x` or `g` the indices correspond to:
+These correspond to complmentarity between two variables, a variable and an expression, or two expressions.
+For more details see the [MPCCModels API](@extref MPCCModels API). 
 ```python
 cc_pairs = np.array([[0,1]])
 cc_types = np.array([0])
