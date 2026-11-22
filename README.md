@@ -57,6 +57,10 @@ JuMP.optimize!(model)
 
 ```
 
+### Using CCOpt from Python, MATLAB, and C++
+An CCOpt interface for the modeling and AD tool [CasADi](https://github.com/casadi/casadi) is also available. This takes advantage of the ahead-of-time compiled shared library [`libMad`](https://github.com/madsuite-org/libMad) which provides a C ABI compatible interface.
+This allows the use of CCOpt from Python, MATLAB, and C++. To install `libMad` and set up and run your first CasADi MPCC, follow the instructions [found in the documentation.]()
+
 ## Solution methods
 
 ### Relaxation method

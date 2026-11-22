@@ -27,7 +27,7 @@ and $$g: \mathbb{R}^n \to \mathbb{R}^m$$ the nonlinear constraints.
 
 !!! warning
     For the problem to be well-specified, the variables $$x_1$$ and $$x_2$$
-    should be lower-bounded, with no upper-bound. The variable $$x_0$$ can be anything.
+    should be lower-bounded. The variable $$x_0$$ can be anything.
 
 ### Algorithms
 
