@@ -6,8 +6,7 @@ function make_homotopy_solver(mpcc; kwargs...)
 end
 
 @testset "Homotopy Solver Tests" begin
-    # `HomotopySolverStats` carries no bound multipliers, so only the primal solution is
-    # checked here (not the full S-stationarity battery of `test_solution`).
+    # `HomotopySolverStats` does not return bound multipliers.
     @testset "MadNLP: $(build(Float64).name)" for build in TEST_PROBLEMS
         prob = build(Float64)
         stats = CCOpt.solve!(make_homotopy_solver(prob.mpcc; comp_tol = 1e-7))
