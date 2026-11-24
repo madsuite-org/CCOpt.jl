@@ -65,6 +65,9 @@ end
     k_ftb::T = 0.9
     tau::T = 0.3
     sigma_min::T = 1e-8
+    # Initial relaxation σ₀ = sigma_mu_ratio * μ₀^sigma_mu_exp
+    sigma_mu_ratio::T = 1.0
+    sigma_mu_exp::T = 1.0
 end
 
 """
@@ -139,8 +142,6 @@ struct RelaxationIterate{T,VT}
     sigma::VT
     nu1::VT
     nu2::VT
-    nu1_filt::VT
-    nu2_filt::VT
     delta1::VT
     delta2::VT
 

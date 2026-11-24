@@ -99,6 +99,87 @@ function test_raw_status_string()
     return
 end
 
+function _caching_model()
+    inner = MOI.instantiate(CCOpt.Optimizer, with_bridge_type = Float64)
+    _add_all_bridges(inner)
+    model = MOI.Utilities.CachingOptimizer(
+        MOI.Utilities.UniversalFallback(MOI.Utilities.Model{Float64}()),
+        inner,
+    )
+    MOI.set(model, MOI.Silent(), true)
+    return model
+end
+
+_sq(f, a) = MOI.ScalarNonlinearFunction(:^, Any[MOI.ScalarNonlinearFunction(:-, Any[f, a]), 2])
+_quad(x) =
+    MOI.ScalarQuadraticFunction([MOI.ScalarQuadraticTerm(2.0, x, x)], MOI.ScalarAffineTerm{Float64}[], 0.0)
+
+# Separable problem with two constraints of each kind (added in interleaved order) and
+# analytic duals:
+#   min x₁ + x₂ + (z-3)² + (t-0)² + (w-3)² + (u-3)² + (v-2)²
+#   s.t. w² ≤ 1, z ≤ 1, exp(v) ≤ e, u² ≤ 4, 2t ≥ 8, [0 ≤ x₁ ⟂ x₂ ≥ 0]
+function _constrained_model(; complementarity::Bool)
+    model = _caching_model()
+    x1, x2, z, w, v, u, t = MOI.add_variables(model, 7)
+    MOI.add_constraint(model, x1, MOI.GreaterThan(0.0))
+    MOI.add_constraint(model, x2, MOI.GreaterThan(0.0))
+    cons = [
+        MOI.add_constraint(model, _quad(w), MOI.LessThan(1.0)) => -2.0,
+        MOI.add_constraint(model, 1.0 * z, MOI.LessThan(1.0)) => -4.0,
+        MOI.add_constraint(model, MOI.ScalarNonlinearFunction(:exp, Any[v]), MOI.LessThan(exp(1.0))) =>
+            -2 / exp(1.0),
+        MOI.add_constraint(model, _quad(u), MOI.LessThan(4.0)) => -0.5,
+        MOI.add_constraint(model, 2.0 * t, MOI.GreaterThan(8.0)) => 4.0,
+    ]
+    if complementarity
+        MOI.add_constraint(model, MOI.VectorOfVariables([x1, x2]), MOI.Complements(2))
+    end
+    obj = MOI.ScalarNonlinearFunction(
+        :+,
+        Any[x1, x2, _sq(z, 3.0), _sq(t, 0.0), _sq(w, 3.0), _sq(u, 3.0), _sq(v, 2.0)],
+    )
+    MOI.set(model, MOI.ObjectiveFunction{MOI.ScalarNonlinearFunction}(), obj)
+    MOI.set(model, MOI.ObjectiveSense(), MOI.MIN_SENSE)
+    return model, [x1, x2, z, w, v, u, t], cons
+end
+
+function test_constraint_duals()
+    # Regression test: NLPModelsJuMP gives every quadratic constraint the same index, so
+    # the second quadratic constraint used to report the dual of the first.
+    for complementarity in (true, false) # `false` exercises the fallback to MadNLP
+        model, x, cons = _constrained_model(; complementarity)
+        MOI.optimize!(model)
+        @test MOI.get(model, MOI.TerminationStatus()) == MOI.LOCALLY_SOLVED
+        @test MOI.get(model, MOI.DualStatus()) == MOI.FEASIBLE_POINT
+        @test MOI.get.(model, MOI.VariablePrimal(), x) ≈ [0, 0, 1, 1, 1, 2, 4] atol = 1e-6
+        for (ci, dual) in cons
+            @test MOI.get(model, MOI.ConstraintDual(), ci) ≈ dual atol = 1e-6
+        end
+        @test MOI.get(model, MOI.SolveTimeSec()) isa Float64
+    end
+    return
+end
+
+function test_infeasible_dual_status()
+    # 0 ≤ x₁ ⟂ x₂ ≥ 0 with x₁ + x₂ ≤ -1: locally infeasible.
+    model = _caching_model()
+    x = MOI.add_variables(model, 2)
+    for xi in x
+        MOI.add_constraint(model, xi, MOI.GreaterThan(0.0))
+    end
+    MOI.add_constraint(model, 1.0 * x[1] + 1.0 * x[2], MOI.LessThan(-1.0))
+    MOI.add_constraint(model, MOI.VectorOfVariables(x), MOI.Complements(2))
+    MOI.set(model, MOI.ObjectiveFunction{MOI.ScalarAffineFunction{Float64}}(), 1.0 * x[1])
+    MOI.set(model, MOI.ObjectiveSense(), MOI.MIN_SENSE)
+    MOI.optimize!(model)
+    status = MOI.get(model, MOI.TerminationStatus())
+    @test status == MOI.LOCALLY_INFEASIBLE
+    if status == MOI.LOCALLY_INFEASIBLE
+        @test MOI.get(model, MOI.DualStatus()) == MOI.INFEASIBLE_POINT
+    end
+    return
+end
+
 function runtests()
     for name in names(@__MODULE__; all = true)
         if startswith("$(name)", "test_")

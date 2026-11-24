@@ -367,7 +367,7 @@ function solve!(
     end
     if converged
         stats.status = convert_nlp_solve(stats.nlp_stats[end])
-    elseif ii > opts.N_homotopy
+    elseif ii > opts.N_homotopy || max_inner_iter_reached
         stats.status = MadNLP.MAXIMUM_ITERATIONS_EXCEEDED
     end
     stats.solution = solver.x_k

@@ -145,7 +145,6 @@ function homotopy!(solver::PenaltySolver{T,VT}) where {T,VT}
             ipm.mu,
             sc,
         )
-        inf_pr_comp = comp_residual(mpcc, MadNLP.variable(ipm.x)) # Primal complementarity residual
         inf_pr_comp_sum = get_inf_pr_cc_sum(solver) # Primal complementarity residual
         solver.inf_pr_cc = get_inf_pr_cc(solver)
         push!(solver.pr_comp_hist, inf_pr_comp_sum)
@@ -155,7 +154,7 @@ function homotopy!(solver::PenaltySolver{T,VT}) where {T,VT}
         # evaluate termination criteria
         MadNLP.@trace(ipm.logger, "Evaluating termination criteria.")
         if !(MadNLP.get_intermediate_callback(ipm)(ipm, MadNLP.UserCallbackRegular())::Bool)
-            return USER_REQUESTED_STOP
+            return MadNLP.USER_REQUESTED_STOP
         end
         max(ipm.inf_pr, ipm.inf_du, ipm.inf_compl, solver.inf_pr_cc) <= ipm.opt.tol &&
             return MadNLP.SOLVE_SUCCEEDED
@@ -344,7 +343,8 @@ function update!(stats::CCOptExecutionStats, solver::PenaltySolver{T,VT}) where 
             stats.multipliers_L[icc2] -
             get_penalty(solver.pnlp) * (stats.solution[icc1] - get_lvar(solver.mpcc)[icc1])
     end
-    stats.objective = MadNLP.unpack_obj(ipm.cb, ipm.obj_val)
+    # Report the MPCC objective, not the penalized one.
+    stats.objective = NLPModels.obj(solver.mpcc, stats.solution)
     MadNLP.unpack_cons!(stats.constraints, ipm.cb, ipm.c)
     stats.constraints .+= ipm.rhs
     @views stats.constraints[ipm.ind_ineq] .+= MadNLP.slack(ipm.x)
