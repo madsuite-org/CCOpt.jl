@@ -152,6 +152,23 @@ function MOI.supports_constraint(
     return true
 end
 
+# NLPModelsJuMP maps every quadratic constraint to `ConstraintIndex(nlin)`, the number of
+# linear constraints parsed before it, so distinct quadratic constraints share an index and
+# their rows cannot be recovered. NLPModelsJuMP places the quadratic rows right after the
+# linear ones, in the order of `ListOfConstraintTypesPresent` and `ListOfConstraintIndices`:
+# renumber them `1, 2, …` in that same order (see `row`).
+function _renumber_quadratic_constraints!(index_map, model)
+    k = 0
+    for (F, S) in MOI.get(model, MOI.ListOfConstraintTypesPresent())
+        F <: MOI.ScalarQuadraticFunction || continue
+        for ci in MOI.get(model, MOI.ListOfConstraintIndices{F, S}())
+            k += 1
+            index_map[ci] = MOI.ConstraintIndex{F, S}(k)
+        end
+    end
+    return index_map
+end
+
 function MOI.copy_to(dest::Optimizer, src::MOI.ModelLike)
     MOI.empty!(dest)
     options =
@@ -175,6 +192,7 @@ function MOI.copy_to(dest::Optimizer, src::MOI.ModelLike)
     end
     # Use filtered_src to build NLPModels
     nlp, index_map = NLPModelsJuMP.nlp_model(filtered_src)
+    _renumber_quadratic_constraints!(index_map, filtered_src)
     dest.nlp = nlp
 
     cc_cons = MOI.get(src, MOI.ListOfConstraintIndices{MOI.VectorOfVariables, _CC_SETS}())
@@ -301,7 +319,7 @@ function MOI.get(optimizer::Optimizer, attr::MOI.DualStatus)
         return MOI.FEASIBLE_POINT
     elseif status == MOI.ALMOST_LOCALLY_SOLVED
         return MOI.NEARLY_FEASIBLE_POINT
-    elseif status == MadNLP.INFEASIBLE_PROBLEM_DETECTED
+    elseif status == MOI.LOCALLY_INFEASIBLE
         return MOI.INFEASIBLE_POINT
     else
         return MOI.UNKNOWN_RESULT_STATUS
@@ -328,9 +346,8 @@ function row(
     optimizer::Optimizer,
     ci::MOI.ConstraintIndex{MOI.ScalarQuadraticFunction{Float64}},
 )
-    nlp = optimizer.nlp
-    offset = nlp.meta.nlin
-    return ci.value + 1
+    # Quadratic constraints are renumbered 1, 2, … in `copy_to` and follow the linear rows.
+    return optimizer.nlp.meta.nlin + ci.value
 end
 
 function row(optimizer::Optimizer, ci::MOI.ConstraintIndex{MOI.ScalarNonlinearFunction})

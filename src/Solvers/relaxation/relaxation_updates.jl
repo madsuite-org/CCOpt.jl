@@ -196,10 +196,12 @@ function kkt_residual_norm(
 
     px .= .-f .+ zl .- zu .- ipm.jacl
     py .= .-c
+    # `c` holds x₁x₂ - σ in the Scholtes rows: evaluate them at the trial relaxation instead.
+    @views py[(end-ncc+1):end] .-= rnlp.σ .- σ
     pzl .= (ipm.xl_r .- ipm.x_lr) .* ipm.zl_r
     pzu .= (ipm.xu_r .- ipm.x_ur) .* ipm.zu_r
 
-    return r
+    return norm(MadNLP.full(ipm.p), Inf)
 end
 
 function update_sigma!(
@@ -364,7 +366,7 @@ function init_sigma!(
     # TODO(@anton) in principle we would like to not reduce this too much depending on how close we are to the KKT conds
     set_relaxation(rnlp, max(gamma_sigma*mean_cc, relax.sigma_min, relax.mu_factor*ipm.mu))
     # update c
-    (@view c[(end-ncc+1):end]) .-= get_relaxation(rnlp)
+    (@view ipm.c[(end-ncc+1):end]) .-= get_relaxation(rnlp)
     # Throw out the filter as the barrier problem has changed
     empty!(ipm.filter)
     push!(ipm.filter, (ipm.theta_max, -Inf))

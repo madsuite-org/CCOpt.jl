@@ -343,7 +343,7 @@ function homotopy!(solver::RelaxationSolver{T,VT}) where {T,VT}
         # evaluate termination criteria
         MadNLP.@trace(ipm.logger, "Evaluating termination criteria.")
         if !(MadNLP.get_intermediate_callback(ipm)(ipm, MadNLP.UserCallbackRegular())::Bool)
-            return USER_REQUESTED_STOP
+            return MadNLP.USER_REQUESTED_STOP
         end
 
         max(ipm.inf_pr, ipm.inf_du, ipm.inf_compl) <= ipm.opt.tol &&
@@ -483,18 +483,20 @@ function update!(stats::CCOptExecutionStats, solver::RelaxationSolver{T,VT}) whe
 
     ind_cc1 = get_ind_cc1(solver.mpcc)
     ind_cc2 = get_ind_cc2(solver.mpcc)
+    # `unpack_y!` flips the sign of the constraint multipliers for maximization problems,
+    # but the bound multipliers are not flipped: undo the flip on the Scholtes multipliers.
+    sense = get_minimize(solver.mpcc) ? one(T) : -one(T)
     for ii in 1:ncc
         icc1 = ind_cc1[ii]
         icc2 = ind_cc2[ii]
+        y_cc = sense * stats.multipliers[end-ncc+ii]
 
         stats.multipliers_x1[ii] =
             stats.multipliers_L[icc1] -
-            stats.multipliers[end-ncc+ii] *
-            (stats.solution[icc2] - get_lvar(solver.mpcc)[icc2])
+            y_cc * (stats.solution[icc2] - get_lvar(solver.mpcc)[icc2])
         stats.multipliers_x2[ii] =
             stats.multipliers_L[icc2] -
-            stats.multipliers[end-ncc+ii] *
-            (stats.solution[icc1] - get_lvar(solver.mpcc)[icc1])
+            y_cc * (stats.solution[icc1] - get_lvar(solver.mpcc)[icc1])
     end
     stats.objective = MadNLP.unpack_obj(ipm.cb, ipm.obj_val)
     MadNLP.unpack_cons!(stats.constraints, ipm.cb, ipm.c)

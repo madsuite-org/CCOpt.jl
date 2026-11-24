@@ -95,14 +95,25 @@ function PenaltySolver(
 ) where {T,VT}
     start_time = time()
     pnlp = solver_opts.penalty(mpcc)
-    ipm = MadNLP.MadNLPSolver(pnlp; ipm_options...)
-    cnt = CCOptCounters(counters = ipm.cnt)
     logger = MadNLP.MadNLPLogger(
         print_level = solver_opts.print_level,
         file_print_level = solver_opts.file_print_level,
         file = solver_opts.output_file == "" ? nothing :
                open(solver_opts.output_file, "w+"),
     )
+    # As in `RelaxationSolver`, default to no bound relaxation: with x₁, x₂ slightly below
+    # their bounds the penalty term ρx₁x₂ becomes negative, which for large ρ creates
+    # spurious stationary points and inaccurate MPCC multipliers.
+    if haskey(ipm_options, :bound_relax_factor)
+        ipm_options[:bound_relax_factor] == zero(T) || MadNLP.@warn(
+            logger,
+            "You have set a positive 'bound_relax_factor', this is probably a mistake! Allowing bound relaxation means complementarity variables are no longer strictly positive which can cause the algorithm to stall at non-physical, inaccurate solutions."
+        )
+        ipm = MadNLP.MadNLPSolver(pnlp; ipm_options...)
+    else
+        ipm = MadNLP.MadNLPSolver(pnlp; bound_relax_factor = zero(T), ipm_options...)
+    end
+    cnt = CCOptCounters(counters = ipm.cnt)
 
     pr_comp_hist = CircularBuffer{T}(solver_opts.comp_history_length)
     ind_cc1 = copy(get_ind_cc1(mpcc))

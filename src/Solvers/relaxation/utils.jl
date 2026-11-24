@@ -83,8 +83,6 @@ function log_iter(
     sigma = get_relaxation(solver.rnlp)
     nu1 = solver.multipliers_cc1
     nu2 = solver.multipliers_cc2
-    nu1_filt = solver.multipliers_cc1_filt
-    nu2_filt = solver.multipliers_cc2_filt
     delta1 = solver.rnlp.δ1
     delta2 = solver.rnlp.δ2
 
@@ -118,8 +116,6 @@ function log_iter(
         sigma,
         nu1,
         nu2,
-        nu1_filt,
-        nu2_filt,
         delta1,
         delta2,
         solver.cnt.counters.factorization_cnt,
