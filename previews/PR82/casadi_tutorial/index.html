@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="referrer" content="no-referrer"/><title>CasADi Tutorial · CCOpt.jl</title><meta name="title" content="CasADi Tutorial · CCOpt.jl"/><meta property="og:title" content="CasADi Tutorial · CCOpt.jl"/><meta property="twitter:title" content="CasADi Tutorial · CCOpt.jl"/><meta name="description" content="Documentation for CCOpt.jl."/><meta property="og:description" content="Documentation for CCOpt.jl."/><meta property="twitter:description" content="Documentation for CCOpt.jl."/><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.63.2/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../search_index.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script><link href="../assets/favicon.ico" rel="icon" type="image/x-icon"/></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../">CCOpt.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../">Home</a></li><li><a class="tocitem" href="../installation/">Installation</a></li><li class="is-active"><a class="tocitem" href>CasADi Tutorial</a><ul class="internal"><li><a class="tocitem" href="#Installing-the-prerequisites:"><span>Installing the prerequisites:</span></a></li><li><a class="tocitem" href="#Modeling-an-MPCC"><span>Modeling an MPCC</span></a></li><li><a class="tocitem" href="#Appendix-A:-other-platforms"><span>Appendix A: other platforms</span></a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>CasADi Tutorial</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>CasADi Tutorial</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/madsuite-org/CCOpt.jl/blob/master/docs/src/casadi_tutorial.md#" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Solving-MPCCs-using-CasADi-and-CCOpt"><a class="docs-heading-anchor" href="#Solving-MPCCs-using-CasADi-and-CCOpt">Solving MPCCs using CasADi and CCOpt</a><a id="Solving-MPCCs-using-CasADi-and-CCOpt-1"></a><a class="docs-heading-anchor-permalink" href="#Solving-MPCCs-using-CasADi-and-CCOpt" title="Permalink"></a></h1><p>In order to provide users of languages other and Julia use of CCOpt, we developed an interface to the symbolic modelling and automatic differentiation tool: CasADi.  This tutorial walks you through the process of installing the required tools, modelling your first MPCC in CasADi, and using CCOpt to solve it. We will provide examples both for the Python and MATLAB interfaces for CasADi, and we assume that you have a working installation and a working knowledge of one of the two languages.</p><div class="admonition is-info" id="Info-a1bafc59821455d2"><header class="admonition-header">Info<a class="admonition-anchor" href="#Info-a1bafc59821455d2" title="Permalink"></a></header><div class="admonition-body"><p>This tutorial also assumes that the user is on an <code>x86-64</code> Linux platform. We additionally support <code>x86-64</code> Windows platforms and both <code>x86-64</code> and <code>arm64</code> based macos platforms. Additional information for these platforms can be found in <a href="#Appendix-A:-other-platforms">Appendix A: other platforms</a>.</p></div></div><p>We advise python users to use your favorite virtual environment manager (<a href="https://virtualenv.pypa.io/en/latest/"><code>virtualenv</code></a>, <a href="https://docs.python.org/3/library/venv.html"><code>venv</code></a>, etc.) to set up your environment, as some environment variable manipulation is required.</p><h2 id="Installing-the-prerequisites:"><a class="docs-heading-anchor" href="#Installing-the-prerequisites:">Installing the prerequisites:</a><a id="Installing-the-prerequisites:-1"></a><a class="docs-heading-anchor-permalink" href="#Installing-the-prerequisites:" title="Permalink"></a></h2><h3 id="CasADi"><a class="docs-heading-anchor" href="#CasADi">CasADi</a><a id="CasADi-1"></a><a class="docs-heading-anchor-permalink" href="#CasADi" title="Permalink"></a></h3><p>In order to use the CCOpt interface in CasADi, you will need to install the <a href="https://web.casadi.org/get/">latest CasADi version</a>, and at least version 3.8. For python users this can easily be done via PyPI:</p><pre><code class="language-shell hljs">pip install casadi&gt;=3.8</code></pre><p>whereas in matlab you will need to download the correct version and run:</p><pre><code class="language-matlab hljs">addpath(&#39;&lt;yourpath&gt;/casadi-3.8.2-windows64-matlab2018b&#39;)</code></pre><p>In order to verify that installation was successful, in python run:</p><pre><code class="language-python hljs">from casadi import *
+x = MX.sym(&quot;x&quot;)
+print(jacobian(sin(x),x))</code></pre><p>or in MATLAB:</p><pre><code class="language-matlab hljs">import casadi.*
+x = MX.sym(&#39;x&#39;)
+disp(jacobian(sin(x),x))</code></pre><h3 id="libMad"><a class="docs-heading-anchor" href="#libMad">libMad</a><a id="libMad-1"></a><a class="docs-heading-anchor-permalink" href="#libMad" title="Permalink"></a></h3><p>The CasADi binaries ship with an plugin for CCOpt, but not the actual binaries. These are provided by <code>libMad.so</code> and it&#39;s bundled Julia runtime. The library can be installed from <a href="https://github.com/madsuite-org/libMad/releases/latest">its GitHub releases page</a>. Alternatively, you can install the latest release by dowloading and untar-ing the release:</p><pre><code class="language-shell hljs">curl -L https://github.com/madsuite-org/libMad/releases/download/&lt;release-tag&gt;/libMad-ubuntu-x86_64-&lt;release-tag&gt;.tar.gz --output libMad.tar.gz
+tar -xzf libMad.tar.gz</code></pre><p>in the location you wish to install the library to. Finally, add the installation to the library path:</p><pre><code class="language-shell hljs">export LD_LIBRARY_PATH=&quot;$LD_LIBRARY_PATH:&lt;path-to-libMad-install&gt;/libMad-ubuntu-x86_64-v0.0.12-casadi/lib&quot;</code></pre><div class="admonition is-info" id="Info-4cd65bcd600961db"><header class="admonition-header">Info<a class="admonition-anchor" href="#Info-4cd65bcd600961db" title="Permalink"></a></header><div class="admonition-body"><p>Due to version conflicts between the host languages and Julia you may additionally need to preload specific versions of system libraries.</p><h4>Python</h4><pre><code class="language-shell hljs">export LD_PRELOAD=&quot;&lt;path-to-libMad-install&gt;/libMad-ubuntu-x86_64-v0.0.12-casadi/lib/julia/libcrypto.so&quot;</code></pre><h4>MATLAB</h4><pre><code class="language-shell hljs">export LD_PRELOAD=&quot;&lt;path-to-libMad-install&gt;/libMad-ubuntu-x86_64-v0.0.12-casadi/lib/julia/libunwind.so&quot;</code></pre><p>More details can be found in the <a href="https://github.com/madsuite-org/libMad">README.md of libMad</a>.</p></div></div><h2 id="Modeling-an-MPCC"><a class="docs-heading-anchor" href="#Modeling-an-MPCC">Modeling an MPCC</a><a id="Modeling-an-MPCC-1"></a><a class="docs-heading-anchor-permalink" href="#Modeling-an-MPCC" title="Permalink"></a></h2><p>Now you are ready to model your first MPCC in CasADi! </p><p>First we will model:</p><p class="math-container">\[  \begin{aligned}
+    \min_{x\in\mathbb{R^3}} \; &amp; (x_1-1)^2 + (x_2-2)^2 + (x_3-3)^2 \\
+    \text{subject to} \quad &amp;  x_1 - x_2 + 2*x_3 = 1\\
+                            &amp;  0\le x_1 \perp x_2 \ge 0\\
+  \end{aligned}\]</p><p>which is a QPCC in vertical form, in python. This can be modelled using CasADi in the following way:</p><pre><code class="language-python hljs">import casadi as ca
+import numpy as np
+
+x = ca.SX.sym(&quot;x&quot;, 3)
+x1 = x[0]
+x2 = x[1]
+x3 = x[2]
+
+g = x1 - x2 + 2*x3
+
+f = (x1-1)**2 + (x2-2)**2 + (x3-3)**2
+
+nlp = {
+    &quot;x&quot;: x,
+    &quot;f&quot;: f,
+    &quot;g&quot;: g,
+}
+
+x0=[2.0, 2.0, 2.0]
+lbx=[0.,0.,-np.inf]
+ubx=[np.inf, np.inf, np.inf]
+lbg=[1]
+ubg=[1]</code></pre><p>This generates all the symbolic variables, constrints, as well as the objective. Additionally we create the necessary bounds.</p><p>We then need to provide the CCOpt plugin with the information about the complementarity constraints. This is done by passing a list of pairs of indices, along with a list of complementarity types: <code>VARVAR=0</code>, <code>VARCON=1</code>, <code>CONVAR=2</code> <code>CONCON=3</code>. These correspond to complmentarity between two variables, a variable and an expression, or two expressions. For more details see the <a href="https://madsuite.org/MPCCModels.jl/dev/api/#API">MPCCModels API</a>. </p><pre><code class="language-python hljs">cc_pairs = np.array([[0,1]])
+cc_types = np.array([0])
+
+casadi_solver_opts = {
+    &quot;cc_pairs&quot;: cc_pairs.tolist(),
+    &quot;cc_types&quot;: cc_types.tolist(),
+}</code></pre><p>In this case we have a complemntarity constraints between <code>x[0]</code> and <code>x[1]</code>.</p><div class="admonition is-info" id="Note-47ffbfd5223f866"><header class="admonition-header">Note<a class="admonition-anchor" href="#Note-47ffbfd5223f866" title="Permalink"></a></header><div class="admonition-body"><p>The vector <code>cc_pairs</code> is a <span>$n_{cc}\times 2$</span> vector and is zero indexed, in python <em>and</em> in MATLAB!</p></div></div><p>We then can pass options to the CCOpt solver, in the standard CasADi way. That is to say as dictionary entries in the options dictionary:</p><pre><code class="language-python hljs">casadi_solver_opts[&quot;ccopt&quot;] = {
+    &quot;relaxation_update.TYPE&quot;: &quot;RolloffRelaxationUpdate&quot;,
+    &quot;q_regularization&quot;: &quot;critical_rho&quot;,
+}
+casadi_solver_opts[&quot;madnlp&quot;] = {
+    &quot;linear_solver&quot;: &quot;MumpsSolver&quot;,
+    &quot;tol&quot;: 1e-8
+}</code></pre><p>Finally, we can create the solver and obtain the solution for given bounds on the variables and expressions:</p><pre><code class="language-python hljs">ccopt_solver = ca.nlpsol(&quot;ccopt_mpcc&quot;, &quot;ccopt&quot;, nlp, casadi_solver_opts)
+
+res = ccopt_solver(
+    x0=x0,
+    lbx=lbx,
+    ubx=ubx,
+    lbg=lbg,
+    ubg=ubg,
+)
+
+print(f&quot;Solution: x1 = {res[&#39;x&#39;][0]} x2 = {res[&#39;x&#39;][1]}, x3 = {res[&#39;x&#39;][2]}&quot;)</code></pre><h3 id="Nonlinear-complementarity"><a class="docs-heading-anchor" href="#Nonlinear-complementarity">Nonlinear complementarity</a><a id="Nonlinear-complementarity-1"></a><a class="docs-heading-anchor-permalink" href="#Nonlinear-complementarity" title="Permalink"></a></h3><p>We now model the more complicated complementarity problem:</p><p class="math-container">\[  \begin{aligned}
+    \min_{x\in\mathbb{R^5}} \; &amp; \frac{1}{2}||x||^2 \\
+    \text{subject to} \quad &amp;  0\le x_1 \perp x_2 \ge 0\\
+                            &amp;  0\le x_1+2x_3^2 \perp x_5 \ge 0\\
+                            &amp;  -2\le x_4 \perp (x_3-5)^2 \ge 0\\
+                            &amp;  0\le x_5^3-3x_3^2 \perp x_1^2 + x_2 \ge -3\\
+  \end{aligned}\]</p><p>As before we first model the expressions and numerical data:</p><pre><code class="language-python hljs">import casadi as ca
+import numpy as np
+
+x = ca.SX.sym(&quot;x&quot;, 5)
+x1 = x[0]
+x2 = x[1]
+x3 = x[2]
+x4 = x[3]
+x5 = x[4]
+
+g = ca.vertcat(
+    x1 + 2*x3**2,
+    (x3-5)**2,
+    x5**3 - 3*x3**3,
+    x1**2 + x2,
+)
+
+f = 0.5*ca.norm(x)**2
+
+nlp = {
+    &quot;x&quot;: x,
+    &quot;f&quot;: f,
+    &quot;g&quot;: g,
+}
+
+x0 = np.ones(5)
+lbx=[0.,0.,-np.inf, -2., 0]
+ubx=np.inf*np.ones(5)
+lbg=[0., 0., 0., -3.]
+ubg=np.inf*np.ones(5)</code></pre><p>Followed by the complementarity data:</p><pre><code class="language-python hljs">cc_pairs = np.array([[0,1], [0,4], [3,2], [2,3]])
+cc_types = np.array([0,2,1,3])
+
+casadi_solver_opts = {
+    &quot;cc_pairs&quot;: cc_pairs.tolist(),
+    &quot;cc_types&quot;: cc_types.tolist(),
+}</code></pre><p>Note that here we use all four complementarity types, and index into both <code>x</code> and <code>g</code>.</p><p>Finally, we can again create the solver and obtain the solution for given bounds on the variables and expressions:</p><pre><code class="language-python hljs">ccopt_solver = ca.nlpsol(&quot;ccopt_mpcc&quot;, &quot;ccopt&quot;, nlp, casadi_solver_opts)
+
+res = ccopt_solver(
+    x0=x0,
+    lbx=lbx,
+    ubx=ubx,
+    lbg=lbg,
+    ubg=ubg,
+)
+
+print(f&quot;Solution: x = {res[&#39;x&#39;]}&quot;)
+print(f&quot;Solution: g = {res[&#39;g&#39;]}&quot;)</code></pre><h2 id="Appendix-A:-other-platforms"><a class="docs-heading-anchor" href="#Appendix-A:-other-platforms">Appendix A: other platforms</a><a id="Appendix-A:-other-platforms-1"></a><a class="docs-heading-anchor-permalink" href="#Appendix-A:-other-platforms" title="Permalink"></a></h2><h3 id="Windows"><a class="docs-heading-anchor" href="#Windows">Windows</a><a id="Windows-1"></a><a class="docs-heading-anchor-permalink" href="#Windows" title="Permalink"></a></h3><p>For windows hosts a similar process can be followed.  The only major difference is that the shared libraries in windows are stored in the <code>bin</code> subdirectory of the libMad installation. This path needs to then be added to the <code>PATH</code>, for example using the steps in <a href="https://www.architectryan.com/2018/03/17/add-to-the-path-on-windows-10/">this tutorial</a>.</p><h3 id="MacOS"><a class="docs-heading-anchor" href="#MacOS">MacOS</a><a id="MacOS-1"></a><a class="docs-heading-anchor-permalink" href="#MacOS" title="Permalink"></a></h3><p>Installation on <code>x86-64</code> and <code>aarch64</code> apple platforms follows similarly to the process for linux platforms. The primary difference involves the use of <code>DYLD_LIBRARY_PATH</code> and <code>DYLD_PRELOAD</code> for setting up paths and library preload orders.</p><div class="admonition is-warning" id="Warning-776ad91d1396b65e"><header class="admonition-header">Warning<a class="admonition-anchor" href="#Warning-776ad91d1396b65e" title="Permalink"></a></header><div class="admonition-body"><p>You will likely have to disable apple &quot;System Integrity Protection&quot; as otherwise, the <code>DYLD_LIBRARY_PATH</code> variable will be silently hidden from processes you run.  Alternatively you can use <code>otool</code> to set absolute paths for <code>libcasadi_nlpsol_ccopt.dylib</code> in your virtual environment <code>site-packages</code>. See this <a href="https://briandfoy.github.io/macos-s-system-integrity-protection-sanitizes-your-environment/">blog post</a> for more details.</p></div></div></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../installation/">« Installation</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.20.0 on <span class="colophon-date" title="Thursday 26 November 2026 10:51">Thursday 26 November 2026</span>. Using Julia version 1.13.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
