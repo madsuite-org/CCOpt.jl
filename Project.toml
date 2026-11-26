@@ -1,14 +1,11 @@
 name = "CCOpt"
 uuid = "6689419a-93c1-455a-8ac6-77991ec4f86b"
 version = "0.1.1"
-authors = [
-        "Anton Edvinovich Pozharskiy <apozharski@gmail.com>",
-        "François Pacaud  <francoispacaud8@gmail.com>",
-        "Armin Nurkanović <armin.nurkanovic@imtek.uni-freiburg.de>"
-        ]
+authors = ["Anton Edvinovich Pozharskiy <apozharski@gmail.com>", "François Pacaud  <francoispacaud8@gmail.com>", "Armin Nurkanović <armin.nurkanovic@imtek.uni-freiburg.de>"]
 
 [deps]
 DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
+DocStringExtensions = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 MPCCModels = "cbaba3ef-cedb-4e5a-9903-71bbac24a74a"
 MadNLP = "2621e9c9-9eb4-46b1-8089-e8c72242dfb6"
@@ -31,11 +28,12 @@ CCOptMathOptInterface = ["MathOptComplements", "NLPModelsJuMP"]
 
 [compat]
 DataStructures = "0.18.22"
+DocStringExtensions = "0.9,0.10"
 Gurobi = "1.7"
 HiGHS = "1.18"
 LinearAlgebra = "1.10"
-MadNLP = "0.10"
 MPCCModels = "0.1.0"
+MadNLP = "0.10"
 MathOptComplements = "0.1"
 NLPModels = "0.21.4"
 NLPModelsJuMP = "0.13.6"
