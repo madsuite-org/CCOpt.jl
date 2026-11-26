@@ -1,18 +1,17 @@
 # Each configuration is run on every problem of `TEST_PROBLEMS` (see `test/problems.jl`).
 # `solver_opts` are passed to `PenaltyOptions`, `ipm_opts` to MadNLP.
 const PENALTY_CONFIGS = [
-    "With dynamic update" => (solver_opts = (dynamic_rho_update = true,), ipm_opts = (;)),
-    "Without dynamic update" => (solver_opts = (dynamic_rho_update = false,), ipm_opts = (;)),
-    "No Q regularization" => (solver_opts = (q_regularization = :none,), ipm_opts = (;)),
-    "Q regularization eigenvalue_decomposition" => (
-        solver_opts = (q_regularization = :eigenvalue_decomposition,),
-        ipm_opts = (;),
-    ),
+    "With dynamic update" =>
+        (solver_opts = (dynamic_rho_update = true,), ipm_opts = (;)),
+    "Without dynamic update" =>
+        (solver_opts = (dynamic_rho_update = false,), ipm_opts = (;)),
+    "No Q regularization" =>
+        (solver_opts = (q_regularization = :none,), ipm_opts = (;)),
+    "Q regularization eigenvalue_decomposition" =>
+        (solver_opts = (q_regularization = :eigenvalue_decomposition,), ipm_opts = (;)),
     "Large initial penalty" => (solver_opts = (rho_0 = 1e3,), ipm_opts = (;)),
-    "Quality Function" => (
-        solver_opts = (;),
-        ipm_opts = (barrier = MadNLP.QualityFunctionUpdate(),),
-    ),
+    "Quality Function" =>
+        (solver_opts = (;), ipm_opts = (barrier = MadNLP.QualityFunctionUpdate(),)),
 ]
 
 # Known failures, as (configuration, problem) => checks expected to fail.
@@ -31,10 +30,10 @@ const PENALTY_BROKEN = Dict{Tuple{String,String},Vector{Symbol}}(
             make_solver(mpcc) = CCOpt.PenaltySolver(
                 mpcc;
                 solver_opts = CCOpt.PenaltyOptions{Float64}(;
-                    print_level = MadNLP.ERROR,
+                    print_level = MadNLP.INFO,
                     config.solver_opts...,
                 ),
-                print_level = MadNLP.ERROR,
+                print_level = MadNLP.INFO,
                 config.ipm_opts...,
             )
             test_solver(
