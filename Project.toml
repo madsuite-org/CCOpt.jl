@@ -28,7 +28,7 @@ CCOptMathOptInterface = ["MathOptComplements", "NLPModelsJuMP"]
 
 [compat]
 DataStructures = "0.18.22"
-DocStringExtensions = "0.10.2"
+DocStringExtensions = "0.9,0.10"
 Gurobi = "1.7"
 HiGHS = "1.18"
 LinearAlgebra = "1.10"
