@@ -3,6 +3,8 @@ using NLPModels, MPCCModels, SolverCore, LinearAlgebra, SparseArrays
 using Serialization
 using Printf
 using DataStructures: CircularBuffer, isfull
+using DocStringExtensions # I hate I have to do this.
+
 import MadNLP
 
 include("types.jl")

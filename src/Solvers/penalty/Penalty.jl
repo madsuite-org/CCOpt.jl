@@ -1,22 +1,104 @@
-@kwdef struct PenaltyOptions{T} <: MadNLP.AbstractOptions
+
+"""
+  Primary options structure for the `CCOpt` penalty based solver.
+  This contains options related to the handling of complementarity constrants and `PenaltySolver` related logging.
+
+  # Fields:
+
+  $(TYPEDFIELDS)
+"""
+@kwdef struct PenaltyOptions{T<:Real} <: MadNLP.AbstractOptions
+    """
+    The penalty formulation to use. The `Ell1Relaxation` is the only non-experimental option.
+    """
     penalty::Type = Ell1Relaxation
     # complementarity homotopy options
+
+    raw"""
+    Initial penalty parameter.
+
+    Range ``[0.0,\infty]``
+    """
     rho_0::T = 1.0
+
+    raw"""
+    Maximum penalty parameter.
+
+    Range ``[0.0,\infty]``
+    """
     rho_max::T = 1e10
+
+    raw"""
+    Factor by which the penalty is increased when stationarity is achieved without complementarity feasibility.
+
+    Range ``(0.0,\infty]``
+    """
     rho_growth_rate::T = 10.0
+
+    raw"""
+    Exponent applied to the current barrier parameter ``\mu`` to get the expected complementarity reduction.
+
+    Range ``(0.0, 1.0]``
+    """
     gamma::T = 0.4
 
     # Algorithm options
+    """
+    Whether the dynamic penalty method of Leyffer et al. is used.
+    """
     dynamic_rho_update::Bool = true # Switch between classic and dynamic algorithm from
+
     # Leyffer2006 paper
+    raw"""
+    How many of the previous complementarity residuals to test for sufficient decrease.
+
+    Range: Integers ``[1,\infty]``
+    """
     comp_history_length::Int = 10 # Length of history buffer (default from Leyffer2006)
+
+    raw"""
+    Factor of sufficient decrease required to not increase the penalty value in the dynamic update algorithm.
+
+    Range: ``(0.0,\infty)``
+    """
     eta_dynamic_update::T = 0.99 # "sufficient decrease" parameter (default from Leyffer2006)
 
     # regularization
+    """
+    How to regularize the indefinite contibutiion of the complementarity constraints to the Hessian of the Lagrangian.
+
+    - `:none`: Does no regularization.
+    - `:critical_rho`: Clips the penalty for each complementarity to the critical value maintaining a threshold positive definiteness.
+    - `:eigenvalue_decomposition`: Project each 2 by 2 matrix to the space of Positive semi-definite matrices, by cliping their eigenvalues to [`min_eig_value`, `max_eig_value`].
+    """
     q_regularization::Symbol = :critical_rho
+
+    raw"""
+    Minimum allowed eigenvalue for the eigenvalue decomposition based `q_regularization`.
+
+    Range: ``(0, \infty]``
+    """
     min_eig_value::T = 1e-8
+
+    raw"""
+    Maximum allowed eigenvalue for the eigenvalue decomposition based `q_regularization`.
+
+    Range: ``(0, \infty]``
+    """
     max_eig_value::T = Inf
+
+    """
+    Factor of the critical multiplier to set for the regularized blocks of ``Q``.
+
+    Range: ``(0.0, 1.0)``
+    """
     critical_rho_factor::T = 0.99
+
+    raw"""
+    Lower bound of the barrier parameter below which `q_regularization` is disabled.
+
+    Range: ``(0.0, \infty)``
+    """
     min_reg_mu::T = 5e-6
     max_reg_mu::T = 1e-1
 
