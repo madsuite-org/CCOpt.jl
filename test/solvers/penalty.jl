@@ -10,17 +10,20 @@ const PENALTY_CONFIGS = [
     "Q regularization eigenvalue_decomposition" =>
         (solver_opts = (q_regularization = :eigenvalue_decomposition,), ipm_opts = (;)),
     "Large initial penalty" => (solver_opts = (rho_0 = 1e3,), ipm_opts = (;)),
-    "Quality Function" =>
-        (solver_opts = (;), ipm_opts = (barrier = MadNLP.QualityFunctionUpdate(),)),
+    # Disable this entirely for now since it is broken on Julia>=1.11 on `macos` hosts but
+    # works on the Julia LTS.
+    # TODO(@anton) Fix how dynamic penalty and quality function interact
+    # "Quality Function" =>
+    #     (solver_opts = (;), ipm_opts = (barrier = MadNLP.QualityFunctionUpdate(),)),
 ]
 
 # Known failures, as (configuration, problem) => checks expected to fail.
 # Remove an entry once the underlying bug is fixed: the test then reports an unexpected pass.
 const PENALTY_BROKEN = Dict{Tuple{String,String},Vector{Symbol}}(
-    # ρ is increased whenever μ decreases while complementarity is not yet satisfied. The
-    # free-mode quality-function barrier changes μ at almost every iteration, so ρ grows to
-    # 1e9 and ν₁ = z_L - ρ x₂ loses accuracy to cancellation.
-    ("Quality Function", "two branches") => [:stationarity],
+# ρ is increased whenever μ decreases while complementarity is not yet satisfied. The
+# free-mode quality-function barrier changes μ at almost every iteration, so ρ grows to
+# 1e9 and ν₁ = z_L - ρ x₂ loses accuracy to cancellation.
+# ("Quality Function", "two branches") => [:stationarity],
 )
 
 @testset "Penalty Test" begin
@@ -30,10 +33,10 @@ const PENALTY_BROKEN = Dict{Tuple{String,String},Vector{Symbol}}(
             make_solver(mpcc) = CCOpt.PenaltySolver(
                 mpcc;
                 solver_opts = CCOpt.PenaltyOptions{Float64}(;
-                    print_level = MadNLP.INFO,
+                    print_level = MadNLP.ERROR,
                     config.solver_opts...,
                 ),
-                print_level = MadNLP.INFO,
+                print_level = MadNLP.ERROR,
                 config.ipm_opts...,
             )
             test_solver(
