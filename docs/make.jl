@@ -1,6 +1,11 @@
 using Documenter
 using CCOpt
+using DocumenterInterLinks
 
+links = InterLinks(
+    "MPCCModels" => "https://madsuite.org/MPCCModels.jl/dev/",
+    "Documenter" => "https://documenter.juliadocs.org/stable/"
+)
 makedocs(
     sitename="CCOpt.jl",
     format=Documenter.HTML(
@@ -12,7 +17,12 @@ makedocs(
     repo="https://github.com/madsuite-org/CCOpt.jl/blob/{commit}{path}#{line}",
     checkdocs=:none,
     clean=true,
-    pages=["Home" => "index.md", "Installation" => "installation.md"],
+    pages=[
+        "Home" => "index.md",
+        "Installation" => "installation.md",
+        "CasADi Tutorial" => "casadi_tutorial.md",
+    ],
+    plugins=[links],
 )
 
 deploydocs(

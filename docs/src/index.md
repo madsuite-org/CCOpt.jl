@@ -27,7 +27,7 @@ and $$g: \mathbb{R}^n \to \mathbb{R}^m$$ the nonlinear constraints.
 
 !!! warning
     For the problem to be well-specified, the variables $$x_1$$ and $$x_2$$
-    should be lower-bounded, with no upper-bound. The variable $$x_0$$ can be anything.
+    should be lower-bounded. The variable $$x_0$$ can be anything.
 
 ### Algorithms
 
@@ -62,3 +62,9 @@ In addition, CCOpt supports complementarity problems formulated using
 ### Linear solvers
 
 CCOpt supports all the sparse linear solvers [wrapped inside MadNLP](https://madsuite.org/MadNLP.jl/dev/#Linear-solvers). We recommend using the HSL solvers for fastest performance.
+
+### External interfaces
+
+CCOpt is compiled, along with MadNLP, into the shared library bundle: libMad.
+This allows any language with a C ABI based Foreign Function Interface to call CCOpt and solve NLPs.
+An interface is provided in the modelling and automatic differentiation code CasADi, and we [provide a tutorial for using this interface](@ref "Solving MPCCs using CasADi and CCOpt").
